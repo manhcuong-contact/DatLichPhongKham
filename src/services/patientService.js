@@ -15,6 +15,16 @@ const getAll = async (params) => {
     .populate('userId', 'fullName email phone avatarUrl isActive')
     .skip(skip).limit(limit).lean();
 
+  data.forEach(p => {
+    if (p.userId) {
+      p.fullName = p.userId.fullName;
+      p.email = p.userId.email;
+      p.phone = p.userId.phone;
+      p.avatarUrl = p.userId.avatarUrl;
+      p.isActive = p.userId.isActive;
+    }
+  });
+
   return { data, page, limit, total, totalPages: Math.ceil(total / limit) };
 };
 
@@ -22,12 +32,24 @@ const getById = async (id) => {
   const { Patient } = require('../models');
   const patient = await Patient.findById(id).populate('userId', 'fullName email phone avatarUrl').lean();
   if (!patient) throw Object.assign(new Error('Không tìm thấy bệnh nhân'), { statusCode: 404 });
+  if (patient.userId) {
+    patient.fullName = patient.userId.fullName;
+    patient.email = patient.userId.email;
+    patient.phone = patient.userId.phone;
+    patient.avatarUrl = patient.userId.avatarUrl;
+  }
   return patient;
 };
 
 const getByUserId = async (userId) => {
   const patient = await patientRepo.findByUserId(userId);
   if (!patient) throw Object.assign(new Error('Hồ sơ bệnh nhân không tồn tại'), { statusCode: 404 });
+  if (patient.userId) {
+    patient.fullName = patient.userId.fullName;
+    patient.email = patient.userId.email;
+    patient.phone = patient.userId.phone;
+    patient.avatarUrl = patient.userId.avatarUrl;
+  }
   return patient;
 };
 

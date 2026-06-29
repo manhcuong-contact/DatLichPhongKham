@@ -76,7 +76,51 @@
     </div>
 </div>
 
+<script src="/js/api.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const user = api.getUser();
+        if (!user || user.roleName !== 'admin') {
+            window.location.href = '/login.html';
+            return;
+        }
+        loadPatients();
+    });
+
+    async function loadPatients() {
+        const tbody = document.getElementById('patient-list');
+        try {
+            const res = await api.get('/patients');
+            const list = res.data || [];
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-secondary">Không có bệnh nhân nào</td></tr>';
+                return;
+            }
+            tbody.innerHTML = list.map(p => {
+                const statusHtml = p.isActive !== false
+                    ? '<span class="badge bg-success-subtle text-success badge-status"><i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>Hoạt động</span>'
+                    : '<span class="badge bg-danger-subtle text-danger badge-status"><i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>Bị khóa</span>';
+                
+                return `
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="${p.avatarUrl ? '/uploads/' + p.avatarUrl : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.fullName||'UN')}" class="rounded-circle" width="40" height="40" alt="avatar">
+                                <div class="fw-semibold">${p.fullName||'Chưa cập nhật'}</div>
+                            </div>
+                        </td>
+                        <td>${p.email||'Chưa cập nhật'}</td>
+                        <td>${p.phone||'Chưa cập nhật'}</td>
+                        <td>${statusHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        } catch(e) {
+            console.error('Load patients error:', e);
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Lỗi tải dữ liệu</td></tr>';
+        }
+    }
+
     function doLogout() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');

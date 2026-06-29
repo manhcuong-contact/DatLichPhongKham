@@ -226,7 +226,7 @@
                             <td>${badge}</td>
                             <td class="text-end pe-4">
                                 <button class="btn btn-sm ${a.status === 'completed' || a.status === 'cancelled' ? 'btn-light disabled' : 'btn-outline-primary'} rounded-pill px-3" 
-                                    onclick="openUpdate(${a.id}, '${a.status}')" ${a.status === 'completed' || a.status === 'cancelled' ? 'disabled' : ''}>
+                                    onclick="openUpdate('${a.id}', '${a.status}')" ${a.status === 'completed' || a.status === 'cancelled' ? 'disabled' : ''}>
                                     Cập nhật
                                 </button>
                             </td>
