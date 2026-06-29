@@ -31,8 +31,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
     }
 }));
 
-// Connect DB
-connectDB();
+// DB connection is now handled in server.js to ensure it connects before listening
 
 // Routes
 app.use('/api/auth',         require('./src/routes/authRoutes'));

@@ -16,7 +16,10 @@ mongoose.set('toJSON', {
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mediflow';
-    await mongoose.connect(mongoURI);
+    await mongoose.connect(mongoURI, {
+      family: 4, // Force IPv4 to fix Node 18+ DNS resolution issues on Railway
+      serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of hanging
+    });
     logger.info('✅ Kết nối MongoDB thành công!');
     logger.info(`   URI: ${mongoURI}`);
     return mongoose.connection;
