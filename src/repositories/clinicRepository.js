@@ -2,17 +2,34 @@ const { Clinic } = require('../models');
 
 const findAll = async (filters = {}) => {
   const query = { isActive: true };
-  let docs = Clinic.find(query);
-  
-  if (filters.limit) docs = docs.limit(parseInt(filters.limit));
-  
-  const results = await docs.lean();
   
   if (filters.search) {
-    const s = filters.search.toLowerCase();
-    return results.filter(c => c.name.toLowerCase().includes(s) || c.city.toLowerCase().includes(s));
+    const s = filters.search.trim();
+    // Search by name or city (case-insensitive)
+    query.$or = [
+      { name: { $regex: s, $options: 'i' } },
+      { city: { $regex: s, $options: 'i' } }
+    ];
   }
-  return results;
+  
+  if (filters.city) {
+    query.city = { $regex: filters.city, $options: 'i' };
+  }
+  
+  const page = parseInt(filters.page) || 1;
+  const limit = parseInt(filters.limit) || 20;
+  const skip = (page - 1) * limit;
+  
+  const total = await Clinic.countDocuments(query);
+  const data = await Clinic.find(query).skip(skip).limit(limit).lean();
+  
+  return {
+    data,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
 };
 
 const findById = async (id) => {
@@ -20,8 +37,6 @@ const findById = async (id) => {
 };
 
 const findNearby = async (lat, lng, radiusKm) => {
-  // Simple haversine approximation in memory since we don't have geo-index setup yet
-  // Or just return all active clinics and let frontend sort/filter. For simplicity:
   const clinics = await Clinic.find({ isActive: true }).lean();
   
   const toRad = (val) => val * Math.PI / 180;
@@ -37,13 +52,29 @@ const findNearby = async (lat, lng, radiusKm) => {
     const cDist = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     const dist = R * cDist;
     
-    c.distance = dist; // attach distance
+    c.distance = dist;
     return dist <= radiusKm;
   }).sort((a, b) => a.distance - b.distance);
+};
+
+const create = async (data) => {
+  const c = new Clinic(data);
+  return c.save();
+};
+
+const update = async (id, data) => {
+  return Clinic.findByIdAndUpdate(id, { $set: data }, { new: true }).lean();
+};
+
+const remove = async (id) => {
+  return Clinic.findByIdAndUpdate(id, { isActive: false }).lean();
 };
 
 module.exports = {
   findAll,
   findById,
-  findNearby
+  findNearby,
+  create,
+  update,
+  remove
 };

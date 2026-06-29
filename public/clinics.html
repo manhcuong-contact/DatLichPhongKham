@@ -7,7 +7,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        #map { height: 600px; border-radius: 1rem; z-index: 1; }
+        .clinic-list-container { max-height: 600px; overflow-y: auto; padding-right: 10px; }
+        .clinic-list-container::-webkit-scrollbar { width: 6px; }
+        .clinic-list-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -31,19 +38,18 @@
         </div>
     </nav>
 
-    <div class="container mt-5 pt-5 pb-5">
-        <div class="text-center mb-5 mt-4">
+    <div class="container-fluid px-4 mt-5 pt-5 pb-5">
+        <div class="text-center mb-4 mt-4">
             <h2 class="fw-bold">Hệ thống Phòng khám</h2>
-            <p class="text-secondary">Khám phá các cơ sở y tế uy tín, chất lượng cao trên toàn quốc.</p>
+            <p class="text-secondary">Khám phá các cơ sở y tế uy tín, chất lượng cao trên bản đồ.</p>
         </div>
         
-        <!-- Filter Form for Haversine (Near me) -->
-        <div class="glass-card p-4 mb-4">
+        <div class="glass-card p-3 mb-4 mx-auto" style="max-width: 1000px;">
             <form id="filterForm" class="row g-3 align-items-center">
                 <div class="col-md-5">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
-                        <input type="text" class="form-control border-start-0" id="f_search" placeholder="Tên phòng khám hoặc thành phố...">
+                        <input type="text" class="form-control border-start-0" id="f_search" placeholder="Tên phòng khám hoặc tỉnh thành...">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -52,29 +58,55 @@
                     </button>
                 </div>
                 <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary-gradient w-100">Tìm kiếm</button>
+                    <button type="submit" class="btn btn-primary-gradient w-100">Lọc trên bản đồ</button>
                 </div>
             </form>
         </div>
 
-        <div class="row g-4" id="clinicsList">
-            <div class="col-12 text-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="glass-card p-2 shadow-sm">
+                    <div id="map"></div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <h5 class="fw-bold mb-3 px-2">Danh sách kết quả</h5>
+                <div class="clinic-list-container" id="clinicsList">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/main.js"></script>
     <script>
+        let map;
+        let markersGroup;
+        let userMarker = null;
+
         document.addEventListener('DOMContentLoaded', () => {
+            initMap();
             loadClinics();
         });
 
+        function initMap() {
+            // Default center at Hanoi
+            map = L.map('map').setView([21.0285, 105.8542], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            markersGroup = L.layerGroup().addTo(map);
+        }
+
         document.getElementById('filterForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            loadClinics(document.getElementById('f_search').value);
+            const search = document.getElementById('f_search').value;
+            loadClinics(search);
         });
 
         document.getElementById('btnNearMe').addEventListener('click', () => {
@@ -89,7 +121,7 @@
                     
                     try {
                         const res = await api.get(`/clinics/nearby?lat=${lat}&lng=${lng}&radius=50`);
-                        renderClinics(res.data, true);
+                        renderMapAndList(res.data, true, lat, lng);
                     } catch (err) {
                         api.showToast('Lỗi khi lấy dữ liệu phòng khám gần đây', 'error');
                     }
@@ -104,40 +136,89 @@
 
         async function loadClinics(search = '') {
             try {
-                let endpoint = '/clinics?limit=50';
+                let endpoint = '/clinics?limit=100';
                 if(search) endpoint += `&search=${encodeURIComponent(search)}`;
                 const res = await api.get(endpoint);
-                renderClinics(res.data, false);
+                renderMapAndList(res.data, false);
             } catch (e) {
                 console.error(e);
             }
         }
 
-        function renderClinics(clinics, isNearby) {
+        function renderMapAndList(clinics, isNearby, userLat = null, userLng = null) {
             const container = document.getElementById('clinicsList');
+            markersGroup.clearLayers();
+            if(userMarker) {
+                map.removeLayer(userMarker);
+                userMarker = null;
+            }
+
             if(clinics.length === 0) {
-                container.innerHTML = `<div class="col-12 text-center py-5 text-secondary">Không tìm thấy phòng khám nào</div>`;
+                container.innerHTML = `<div class="text-center py-5 text-secondary">Không tìm thấy phòng khám nào phù hợp</div>`;
                 return;
             }
             
             container.innerHTML = '';
-            clinics.forEach(item => {
-                const dist = isNearby && item.distance ? `<span class="badge bg-danger rounded-pill"><i class="bi bi-geo-alt-fill me-1"></i>${item.distance.toFixed(1)} km</span>` : '';
+            const bounds = [];
+            
+            // Add user location marker if near me
+            if (isNearby && userLat && userLng) {
+                userMarker = L.marker([userLat, userLng], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map).bindPopup('<b>Vị trí của bạn</b>').openPopup();
+                bounds.push([userLat, userLng]);
+            }
+
+            clinics.forEach((item, index) => {
+                const dist = isNearby && item.distance ? `<span class="badge bg-danger rounded-pill float-end"><i class="bi bi-geo-alt-fill me-1"></i>${item.distance.toFixed(1)} km</span>` : '';
+                
+                // Render List item
+                const cardId = `clinic-card-${item._id}`;
                 container.innerHTML += `
-                    <div class="col-md-6 col-lg-4">
-                        <div class="glass-card h-100 position-relative">
-                            ${dist ? `<div class="position-absolute top-0 end-0 m-3 z-3">${dist}</div>` : ''}
-                            <img src="${item.imageUrl ? '/uploads/'+item.imageUrl : 'https://placehold.co/600x400/e0f2fe/0ea5e9?text=Clinic'}" class="card-img-top object-fit-cover" height="200" alt="${item.name}">
-                            <div class="p-4">
-                                <h5 class="fw-bold mb-2">${item.name}</h5>
-                                <p class="text-secondary small mb-2"><i class="bi bi-geo-alt me-1"></i> ${item.address}, ${item.city}</p>
-                                <p class="text-secondary small mb-3"><i class="bi bi-clock me-1"></i> ${item.openTime.substring(0,5)} - ${item.closeTime.substring(0,5)}</p>
-                                <a href="/doctors.html" class="btn btn-outline-primary rounded-pill w-100">Xem Bác sĩ</a>
+                    <div class="glass-card mb-3 p-3 position-relative" id="${cardId}" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='translateX(5px)'" onmouseout="this.style.transform='translateX(0)'" onclick="focusClinic(${item.latitude}, ${item.longitude})">
+                        <div class="row g-0">
+                            <div class="col-4">
+                                <img src="${item.imageUrl ? '/uploads/'+item.imageUrl : 'https://placehold.co/300x300/e0f2fe/0ea5e9?text=Clinic'}" class="img-fluid rounded object-fit-cover h-100" alt="${item.name}">
+                            </div>
+                            <div class="col-8 ps-3">
+                                ${dist}
+                                <h6 class="fw-bold mb-1 text-primary">${item.name}</h6>
+                                <p class="text-secondary small mb-1"><i class="bi bi-geo-alt me-1"></i> ${item.address}, ${item.city}</p>
+                                <a href="/doctors.html" class="btn btn-sm btn-outline-primary mt-2">Xem Bác sĩ</a>
                             </div>
                         </div>
                     </div>
                 `;
+
+                // Render Map Marker
+                if (item.latitude && item.longitude) {
+                    bounds.push([item.latitude, item.longitude]);
+                    const marker = L.marker([item.latitude, item.longitude]).bindPopup(`
+                        <b>${item.name}</b><br>
+                        ${item.address}, ${item.city}<br>
+                        <a href="/doctors.html" class="btn btn-sm btn-primary mt-2 w-100">Xem bác sĩ</a>
+                    `);
+                    markersGroup.addLayer(marker);
+                }
             });
+
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+            }
+        }
+        
+        // Expose to window for inline onclick
+        window.focusClinic = function(lat, lng) {
+            if(lat && lng) {
+                map.flyTo([lat, lng], 16, { duration: 1.5 });
+            }
         }
     </script>
 </body>
