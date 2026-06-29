@@ -127,11 +127,14 @@ const getAvailableSlots = async (doctorId, date) => {
     return h * 60 + m;
   };
 
-  const now = new Date();
-  // We use current time in UTC+7 for Vietnam, but usually server is in some timezone
-  // For safety, let's just use server local time
-  const isToday = start.toDateString() === now.toDateString();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  // Lấy giờ hiện tại theo múi giờ Việt Nam (UTC+7)
+  const vnTime = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+  
+  // Parse ngày khách chọn
+  const [year, month, day] = date.split('-').map(Number);
+  
+  const isToday = (vnTime.getFullYear() === year && vnTime.getMonth() + 1 === month && vnTime.getDate() === day);
+  const currentMinutes = vnTime.getHours() * 60 + vnTime.getMinutes();
 
   return defaultSlots.filter(slot => {
     const slotStartMin = toMinutes(slot.startTime);
