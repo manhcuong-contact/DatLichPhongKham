@@ -2,6 +2,7 @@
  * src/config/database.js
  * MongoDB Connection using Mongoose
  */
+global.crypto = require('crypto');
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 
