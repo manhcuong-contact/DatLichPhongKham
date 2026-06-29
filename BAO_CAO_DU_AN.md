@@ -160,9 +160,9 @@ Biểu đồ Use Case dưới đây mô tả tổng quan sự tương tác giữ
 
 ```mermaid
 usecaseDiagram
-    actor "Patient\n(Bệnh nhân)" as P
-    actor "Doctor\n(Bác sĩ)" as D
-    actor "Admin\n(Quản trị viên)" as A
+    actor "Bệnh nhân (Patient)" as P
+    actor "Bác sĩ (Doctor)" as D
+    actor "Quản trị viên (Admin)" as A
 
     rectangle "MediFlow System - Đặt lịch khám trực tuyến" {
         usecase "UC01: Đăng ký tài khoản" as UC1
@@ -252,28 +252,28 @@ Biểu đồ hoạt động giúp mô phỏng luồng chảy nghiệp vụ (Busi
 
 ```mermaid
 flowchart TD
-    Start((Bắt đầu)) --> Login[Bệnh nhân Đăng nhập]
-    Login --> Search[Tìm Bác sĩ / Phòng khám]
-    Search --> PickDoc[Chọn Bác sĩ cụ thể]
-    PickDoc --> PickDate[Chọn Ngày khám (Input Date)]
+    Start((Bắt đầu)) --> Login["Bệnh nhân Đăng nhập"]
+    Login --> Search["Tìm Bác sĩ / Phòng khám"]
+    Search --> PickDoc["Chọn Bác sĩ cụ thể"]
+    PickDoc --> PickDate["Chọn Ngày khám (Input Date)"]
     
-    PickDate --> QueryAPI{API: Lấy Slot trống}
-    QueryAPI -->|Trả về Array| RenderSlots[Hiển thị danh sách giờ (8:00, 8:30...)]
+    PickDate --> QueryAPI{"API: Lấy Slot trống"}
+    QueryAPI -->|Trả về Array| RenderSlots["Hiển thị danh sách giờ (8:00, 8:30...)"]
     
-    RenderSlots --> UserAction[Bệnh nhân chọn 1 Slot]
-    UserAction --> FillForm[Nhập Triệu chứng]
-    FillForm --> Submit[Bấm nút 'Xác nhận Đặt lịch']
+    RenderSlots --> UserAction["Bệnh nhân chọn 1 Slot"]
+    UserAction --> FillForm["Nhập Triệu chứng"]
+    FillForm --> Submit["Bấm nút 'Xác nhận Đặt lịch'"]
     
-    Submit --> CheckConflict{Backend:\nKiểm tra trùng lịch?}
+    Submit --> CheckConflict{"Backend:<br/>Kiểm tra trùng lịch?"}
     
-    CheckConflict -- Bị trùng (Có người đặt trước) --> ThrowError[Trả về lỗi 409 Conflict]
-    ThrowError --> Alert[Hiển thị Toast: 'Giờ đã được đặt, vui lòng chọn lại']
+    CheckConflict -- Bị trùng (Có người đặt trước) --> ThrowError["Trả về lỗi 409 Conflict"]
+    ThrowError --> Alert["Hiển thị Toast: 'Giờ đã được đặt, vui lòng chọn lại'"]
     Alert --> PickDate
     
-    CheckConflict -- Hợp lệ (Không trùng) --> SaveDB[Lưu vào Database, Status='pending']
-    SaveDB --> SendMail[Kích hoạt Background Job: Gửi Email Xác nhận]
-    SendMail --> SuccessResponse[Trả về 201 Created]
-    SuccessResponse --> Redirect[Chuyển hướng sang trang Quản lý lịch hẹn]
+    CheckConflict -- Hợp lệ (Không trùng) --> SaveDB["Lưu vào Database, Status='pending'"]
+    SaveDB --> SendMail["Kích hoạt Background Job: Gửi Email Xác nhận"]
+    SendMail --> SuccessResponse["Trả về 201 Created"]
+    SuccessResponse --> Redirect["Chuyển hướng sang trang Quản lý lịch hẹn"]
     Redirect --> End((Kết thúc))
 ```
 
