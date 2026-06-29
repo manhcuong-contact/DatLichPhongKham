@@ -25,13 +25,16 @@ const bookAppointment = async (userId, data) => {
   const doctor = await doctorRepo.findById(data.doctorId);
   if (!doctor) throw Object.assign(new Error('Không tìm thấy bác sĩ'), { statusCode: 404 });
 
+  // doctorId trong Appointment ref User, nên dùng doctor.userId
+  const doctorUserId = doctor.userId ? (doctor.userId._id || doctor.userId) : doctor._id;
+
   // Check conflict
-  const isConflict = await appointmentRepo.checkConflict(doctor._id, data.appointmentDate, data.startTime, data.endTime);
+  const isConflict = await appointmentRepo.checkConflict(doctorUserId, data.appointmentDate, data.startTime, data.endTime);
   if (isConflict) throw Object.assign(new Error('Khung giờ này đã có người đặt'), { statusCode: 409 });
 
   const appointmentData = {
     patientId:       userId,
-    doctorId:        doctor.userId ? (doctor.userId._id || doctor.userId) : doctor._id,
+    doctorId:        doctorUserId,
     clinicId:        doctor.clinicId ? (doctor.clinicId._id || doctor.clinicId) : null,
     appointmentDate: data.appointmentDate,
     startTime:       data.startTime,
@@ -44,12 +47,17 @@ const bookAppointment = async (userId, data) => {
 
   // Gửi email xác nhận (Optional - if mail is configured)
   try {
-    const templates = require('../utils/emailTemplates');
-    const { sendMail } = require('../utils/mailer');
-    const appointmentFull = await appointmentRepo.findById(newApt._id);
-    if (appointmentFull && patient.email) {
-      const emailData = templates.appointmentConfirmation(appointmentFull);
-      await sendMail({ to: patient.email, ...emailData });
+    const appointmentFull = await appointmentRepo.findById(newApt._id || newApt.id);
+    if (appointmentFull) {
+      const patientUser = appointmentFull.patientId;
+      if (patientUser && patientUser.email) {
+        const { sendMail } = require('../helpers/emailHelper');
+        await sendMail({
+          to: patientUser.email,
+          subject: 'Xác nhận đặt lịch hẹn - MediFlow',
+          html: `<p>Xin chào ${patientUser.fullName || ''},<br>Lịch hẹn của bạn vào ngày <strong>${data.appointmentDate}</strong> lúc <strong>${data.startTime}</strong> đã được đặt thành công.</p>`
+        });
+      }
     }
   } catch(e) {
     console.error('Lỗi gửi email:', e.message);

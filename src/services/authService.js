@@ -33,12 +33,12 @@ const register = async ({ fullName, email, password, phone }) => {
   await patRepo.create({ userId: user._id });
 
   const payload = {
-    id: user._id,
+    id: user.id,
     roleName: user.roleName,
   };
   const accessToken  = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
-  await userRepo.updateRefreshToken(user._id, refreshToken);
+  await userRepo.updateRefreshToken(user.id, refreshToken);
 
   const { passwordHash: _, ...safeUser } = user.toObject ? user.toObject() : user;
   return { user: { ...safeUser, roleName: 'patient' }, accessToken, refreshToken };
@@ -60,12 +60,12 @@ const login = async ({ email, password }) => {
   }
 
   const payload = {
-    id: user._id,
+    id: user.id || user._id,
     roleName: user.roleName,
   };
   const accessToken  = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
-  await userRepo.updateRefreshToken(user._id, refreshToken);
+  await userRepo.updateRefreshToken(user.id || user._id, refreshToken);
 
   const { passwordHash: _, refreshToken: __, ...safeUser } = user;
   return { user: safeUser, accessToken, refreshToken };
@@ -102,7 +102,7 @@ const forgotPassword = async (email) => {
 
   const token  = crypto.randomBytes(32).toString('hex');
   const expiry = new Date(Date.now() + 3600000); // 1 giờ
-  await userRepo.setResetToken(user.id, token, expiry);
+  await userRepo.saveResetToken(user.id, token, expiry);
 
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/pages/reset-password.html?token=${token}`;
   const { subject, html } = templates.resetPassword(user.fullName, resetUrl);
@@ -118,11 +118,13 @@ const resetPassword = async (token, newPassword) => {
   }
   const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
   await userRepo.updatePassword(user.id, hashed);
+  await userRepo.clearResetToken(user.id);
 };
 
 const changePassword = async (userId, { currentPassword, newPassword }) => {
   const user = await userRepo.findById(userId);
-  const match = await bcrypt.compare(currentPassword, user.password);
+  if (!user) throw Object.assign(new Error('Tài khoản không tồn tại'), { statusCode: 404 });
+  const match = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!match) {
     const err = new Error('Mật khẩu hiện tại không đúng');
     err.statusCode = 400;

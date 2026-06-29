@@ -6,15 +6,15 @@ const { body } = require('express-validator');
 const create = [
   body('fullName').notEmpty().withMessage('Họ tên không được để trống').trim(),
   body('email').isEmail().withMessage('Email không hợp lệ').toLowerCase().trim(),
-  body('specialtyId').isInt().withMessage('Chuyên khoa không hợp lệ'),
-  body('clinicId').isInt().withMessage('Phòng khám không hợp lệ'),
+  body('specialtyId').isMongoId().withMessage('Chuyên khoa không hợp lệ'),
+  body('clinicId').isMongoId().withMessage('Phòng khám không hợp lệ'),
   body('consultationFee').isFloat({ min: 0 }).withMessage('Phí khám phải lớn hơn hoặc bằng 0'),
 ];
 
 const update = [
   body('fullName').optional().notEmpty().withMessage('Họ tên không được để trống').trim(),
-  body('specialtyId').optional().isInt().withMessage('Chuyên khoa không hợp lệ'),
-  body('clinicId').optional().isInt().withMessage('Phòng khám không hợp lệ'),
+  body('specialtyId').optional().isMongoId().withMessage('Chuyên khoa không hợp lệ'),
+  body('clinicId').optional().isMongoId().withMessage('Phòng khám không hợp lệ'),
   body('consultationFee').optional().isFloat({ min: 0 }).withMessage('Phí khám phải lớn hơn hoặc bằng 0'),
 ];
 

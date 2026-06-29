@@ -5,11 +5,22 @@ const patientRepo = require('../repositories/patientRepository');
 const userRepo    = require('../repositories/userRepository');
 
 const getAll = async (params) => {
-  return patientRepo.getAll(params);
+  const { Patient } = require('../models');
+  const page = parseInt(params.page) || 1;
+  const limit = parseInt(params.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const total = await Patient.countDocuments();
+  const data = await Patient.find()
+    .populate('userId', 'fullName email phone avatarUrl isActive')
+    .skip(skip).limit(limit).lean();
+
+  return { data, page, limit, total, totalPages: Math.ceil(total / limit) };
 };
 
 const getById = async (id) => {
-  const patient = await patientRepo.findById(id);
+  const { Patient } = require('../models');
+  const patient = await Patient.findById(id).populate('userId', 'fullName email phone avatarUrl').lean();
   if (!patient) throw Object.assign(new Error('Không tìm thấy bệnh nhân'), { statusCode: 404 });
   return patient;
 };

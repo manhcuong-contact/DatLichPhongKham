@@ -23,10 +23,8 @@ const getAll = async (req, res) => {
       if (patient) params.patientId = patient.id;
       else return R.paginated(res, [], { page: 1, limit: 10, total: 0, totalPages: 0 }, 'Chưa có hồ sơ');
     } else if (req.user.roleName === 'doctor') {
-      const doctorRepo = require('../repositories/doctorRepository');
-      const doctor = await doctorRepo.findByUserId(req.user.id);
-      if (doctor) params.doctorId = doctor.doctorId; // using vw_DoctorFull field
-      else return R.paginated(res, [], { page: 1, limit: 10, total: 0, totalPages: 0 }, 'Chưa có hồ sơ bác sĩ');
+      // Appointment.doctorId là ref đến User, nên filter theo req.user.id
+      params.doctorId = req.user.id;
     }
 
     const data = await appointmentService.getAll(params);
@@ -42,11 +40,11 @@ const getById = async (req, res) => {
     if (req.user.roleName === 'patient') {
       const patientRepo = require('../repositories/patientRepository');
       const patient = await patientRepo.findByUserId(req.user.id);
-      if (!patient || patient.id !== data.patientId) return R.forbidden(res);
+      const dataPatientId = data.patientId?._id?.toString() || data.patientId?.toString();
+      if (!patient || req.user.id.toString() !== dataPatientId) return R.forbidden(res);
     } else if (req.user.roleName === 'doctor') {
-      const doctorRepo = require('../repositories/doctorRepository');
-      const doctor = await doctorRepo.findByUserId(req.user.id);
-      if (!doctor || doctor.doctorId !== data.doctorId) return R.forbidden(res);
+      const dataDoctorId = data.doctorId?._id?.toString() || data.doctorId?.toString();
+      if (req.user.id.toString() !== dataDoctorId) return R.forbidden(res);
     }
 
     return R.success(res, data, 'Lấy chi tiết lịch hẹn thành công');

@@ -52,9 +52,12 @@ const create = async (data) => {
   return apt.save();
 };
 
-const updateStatus = async (id, status, notes = '') => {
+const updateStatus = async (id, status, extraData = {}) => {
   const updateData = { status };
-  if (notes) updateData.notes = notes;
+  if (extraData.note !== undefined) updateData.notes = extraData.note;
+  if (extraData.diagnosis !== undefined) updateData.diagnosis = extraData.diagnosis;
+  if (extraData.prescription !== undefined) updateData.prescription = extraData.prescription;
+  if (extraData.cancelReason !== undefined) updateData.cancelReason = extraData.cancelReason;
   return Appointment.findByIdAndUpdate(id, { $set: updateData }, { new: true }).lean();
 };
 
