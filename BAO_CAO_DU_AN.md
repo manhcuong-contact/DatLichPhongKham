@@ -159,29 +159,33 @@ Trong quy trình công nghệ phần mềm, Phân tích hướng đối tượng
 Biểu đồ Use Case dưới đây mô tả tổng quan sự tương tác giữa các tác nhân (Actors) và hệ thống MediFlow.
 
 ```mermaid
-usecaseDiagram
-    actor "Bệnh nhân (Patient)" as P
-    actor "Bác sĩ (Doctor)" as D
-    actor "Quản trị viên (Admin)" as A
+flowchart LR
+    %% Tác nhân (Actors)
+    P["Bệnh nhân (Patient)"]
+    D["Bác sĩ (Doctor)"]
+    A["Quản trị viên (Admin)"]
 
-    rectangle "MediFlow System - Đặt lịch khám trực tuyến" {
-        usecase "UC01: Đăng ký tài khoản" as UC1
-        usecase "UC02: Đăng nhập hệ thống" as UC2
-        usecase "UC03: Quản lý hồ sơ cá nhân" as UC3
-        usecase "UC04: Tìm kiếm bác sĩ/phòng khám" as UC4
-        usecase "UC05: Đặt lịch khám" as UC5
-        usecase "UC06: Xem danh sách & Hủy lịch" as UC6
-        usecase "UC07: Xem lịch sử khám bệnh" as UC7
-        usecase "UC08: Xem danh sách lịch hẹn" as UC8
-        usecase "UC09: Xác nhận duyệt lịch" as UC9
-        usecase "UC10: Ghi nhận kết quả khám" as UC10
-        usecase "UC11: Quản lý Users" as UC11
-        usecase "UC12: Quản lý Doctors" as UC12
-        usecase "UC13: Quản lý Clinics" as UC13
-        usecase "UC14: Quản lý Specialties" as UC14
-        usecase "UC15: Quản lý toàn bộ Appointments" as UC15
-    }
+    %% Hệ thống
+    subgraph System ["MediFlow System - Đặt lịch khám trực tuyến"]
+        direction TB
+        UC1(["UC01: Đăng ký tài khoản"])
+        UC2(["UC02: Đăng nhập hệ thống"])
+        UC3(["UC03: Quản lý hồ sơ cá nhân"])
+        UC4(["UC04: Tìm kiếm bác sĩ/phòng khám"])
+        UC5(["UC05: Đặt lịch khám"])
+        UC6(["UC06: Xem danh sách & Hủy lịch"])
+        UC7(["UC07: Xem lịch sử khám bệnh"])
+        UC8(["UC08: Xem danh sách lịch hẹn"])
+        UC9(["UC09: Xác nhận duyệt lịch"])
+        UC10(["UC10: Ghi nhận kết quả khám"])
+        UC11(["UC11: Quản lý Users"])
+        UC12(["UC12: Quản lý Doctors"])
+        UC13(["UC13: Quản lý Clinics"])
+        UC14(["UC14: Quản lý Specialties"])
+        UC15(["UC15: Quản lý toàn bộ Appointments"])
+    end
 
+    %% Các liên kết (Relationships)
     P --> UC1
     P --> UC2
     P --> UC3
