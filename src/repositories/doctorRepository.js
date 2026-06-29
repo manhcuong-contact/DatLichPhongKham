@@ -2,21 +2,38 @@ const { Doctor, User, Clinic, Specialty } = require('../models');
 
 const findAll = async (filters = {}) => {
   const query = { isActive: true };
-  if (filters.specialtyId) query.specialtyId = filters.specialtyId;
-  if (filters.clinicId) query.clinicId = filters.clinicId;
+  if (filters.specialtyId && filters.specialtyId !== 'null' && filters.specialtyId !== 'NaN') query.specialtyId = filters.specialtyId;
+  if (filters.clinicId && filters.clinicId !== 'null' && filters.clinicId !== 'NaN') query.clinicId = filters.clinicId;
   
-  let docs = Doctor.find(query).populate('userId', 'fullName email phone avatarUrl').populate('clinicId', 'name address').populate('specialtyId', 'name');
-  if (filters.search) {
-    // Basic search simulation
-    // A robust search would need text indexes
-  }
-  
-  const results = await docs.lean();
+  const page = parseInt(filters.page) || 1;
+  const limit = parseInt(filters.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  let docs = Doctor.find(query)
+    .populate('userId', 'fullName email phone avatarUrl')
+    .populate('clinicId', 'name address')
+    .populate('specialtyId', 'name');
+    
+  let results = await docs.lean();
+
   if (filters.search) {
     const s = filters.search.toLowerCase();
-    return results.filter(d => d.userId.fullName.toLowerCase().includes(s) || (d.clinicId && d.clinicId.name.toLowerCase().includes(s)));
+    results = results.filter(d => 
+      (d.userId && d.userId.fullName && d.userId.fullName.toLowerCase().includes(s)) || 
+      (d.clinicId && d.clinicId.name && d.clinicId.name.toLowerCase().includes(s))
+    );
   }
-  return results;
+  
+  const total = results.length;
+  const paginatedData = results.slice(skip, skip + limit);
+
+  return {
+    data: paginatedData,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
 };
 
 const findById = async (id) => {

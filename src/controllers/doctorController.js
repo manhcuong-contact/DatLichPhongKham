@@ -12,8 +12,8 @@ const getAll = async (req, res) => {
       page:        parseInt(req.query.page) || 1,
       limit:       parseInt(req.query.limit) || 10,
       search:      req.query.search || '',
-      specialtyId: req.query.specialtyId ? parseInt(req.query.specialtyId) : null,
-      clinicId:    req.query.clinicId ? parseInt(req.query.clinicId) : null,
+      specialtyId: req.query.specialtyId || null,
+      clinicId:    req.query.clinicId || null,
       activeOnly,
     };
     const data = await doctorService.getAll(params);

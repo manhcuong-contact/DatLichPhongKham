@@ -163,8 +163,12 @@
             
             container.innerHTML = '';
             docs.forEach(d => {
-                const avatar = d.avatarUrl ? '/uploads/'+d.avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(d.fullName)}`;
-                const fee = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(d.consultationFee);
+                const fullName = d.userId ? d.userId.fullName : 'Chưa cập nhật';
+                const avatar = (d.userId && d.userId.avatarUrl) ? '/uploads/'+d.userId.avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}`;
+                const fee = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(d.price || 0);
+                const specialtyName = d.specialtyId ? d.specialtyId.name : 'Chưa cập nhật';
+                const clinicName = d.clinicId ? d.clinicId.name : 'Chưa cập nhật';
+                const clinicAddress = d.clinicId ? d.clinicId.address : '';
                 
                 container.innerHTML += `
                     <div class="col-md-6 col-lg-4">
@@ -172,17 +176,17 @@
                             <div class="d-flex align-items-center mb-3">
                                 <img src="${avatar}" class="rounded-circle object-fit-cover shadow-sm me-3" width="70" height="70">
                                 <div>
-                                    <h5 class="fw-bold mb-1">${d.fullName}</h5>
-                                    <span class="badge badge-soft-primary mb-1">${d.degree || 'Bác sĩ'}</span>
+                                    <h5 class="fw-bold mb-1">${fullName}</h5>
+                                    <span class="badge badge-soft-primary mb-1">${d.title || 'Bác sĩ'}</span>
                                 </div>
                             </div>
                             <div class="small text-secondary mb-3">
-                                <p class="mb-1"><i class="bi bi-heart-pulse text-danger me-2"></i> ${d.specialtyName}</p>
-                                <p class="mb-1"><i class="bi bi-hospital text-primary me-2"></i> ${d.clinicName}</p>
-                                <p class="mb-1"><i class="bi bi-geo-alt me-2"></i> ${d.clinicAddress}</p>
+                                <p class="mb-1"><i class="bi bi-heart-pulse text-danger me-2"></i> ${specialtyName}</p>
+                                <p class="mb-1"><i class="bi bi-hospital text-primary me-2"></i> ${clinicName}</p>
+                                <p class="mb-1"><i class="bi bi-geo-alt me-2"></i> ${clinicAddress}</p>
                                 <p class="mb-0 text-success fw-medium"><i class="bi bi-cash me-2"></i> Phí: ${fee}</p>
                             </div>
-                            <button class="btn btn-outline-primary rounded-pill w-100 mt-2" onclick="openBooking(${d.id})">Đặt lịch ngay</button>
+                            <button class="btn btn-outline-primary rounded-pill w-100 mt-2" onclick="openBooking('${d._id}')">Đặt lịch ngay</button>
                         </div>
                     </div>
                 `;
@@ -200,11 +204,15 @@
                 return;
             }
 
-            const doc = allDoctors.find(x => x.id === id);
-            document.getElementById('b_doctorId').value = doc.id;
-            document.getElementById('b_docName').textContent = doc.fullName;
-            document.getElementById('b_docSpecialty').textContent = doc.specialtyName;
-            document.getElementById('b_docAvatar').src = doc.avatarUrl ? '/uploads/'+doc.avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}`;
+            const doc = allDoctors.find(x => x._id === id);
+            if (!doc) return;
+            const fullName = doc.userId ? doc.userId.fullName : 'Bác sĩ';
+            const specialtyName = doc.specialtyId ? doc.specialtyId.name : '';
+            
+            document.getElementById('b_doctorId').value = doc._id;
+            document.getElementById('b_docName').textContent = fullName;
+            document.getElementById('b_docSpecialty').textContent = specialtyName;
+            document.getElementById('b_docAvatar').src = (doc.userId && doc.userId.avatarUrl) ? '/uploads/'+doc.userId.avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}`;
             
             // reset form
             document.getElementById('b_date').value = '';
@@ -266,7 +274,7 @@
             
             try {
                 await api.post('/appointments', {
-                    doctorId: parseInt(document.getElementById('b_doctorId').value),
+                    doctorId: document.getElementById('b_doctorId').value,
                     appointmentDate: document.getElementById('b_date').value,
                     startTime: document.getElementById('b_startTime').value.substring(0,5),
                     endTime: document.getElementById('b_endTime').value.substring(0,5),
