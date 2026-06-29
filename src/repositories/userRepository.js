@@ -37,6 +37,14 @@ const verifyEmail = async (id) => {
   return User.findByIdAndUpdate(id, { isEmailVerified: true }).lean();
 };
 
+const updateRefreshToken = async (id, token) => {
+  return User.findByIdAndUpdate(id, { refreshToken: token }).lean();
+};
+
+const findByRefreshToken = async (token) => {
+  return User.findOne({ refreshToken: token }).lean();
+};
+
 module.exports = {
   findByEmail,
   findById,
@@ -46,5 +54,7 @@ module.exports = {
   saveResetToken,
   findByResetToken,
   clearResetToken,
-  verifyEmail
+  verifyEmail,
+  updateRefreshToken,
+  findByRefreshToken
 };

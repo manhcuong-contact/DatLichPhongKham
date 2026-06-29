@@ -17,10 +17,10 @@ const seedDB = async () => {
     await Patient.deleteMany({});
     
     logger.info('Seeding Admin...');
-    const adminPass = await bcrypt.hash('admin123', 10);
+    const adminPass = await bcrypt.hash('Admin@123456', 10);
     await User.create({
       fullName: 'Administrator',
-      email: 'admin@mediflow.vn',
+      email: 'admin@mediflow.com',
       passwordHash: adminPass,
       phone: '0987654321',
       roleName: 'admin',
@@ -43,6 +43,11 @@ const seedDB = async () => {
     const u2 = await User.create({ fullName: 'Dr. Nguyễn Thị B', email: 'doctorB@mediflow.vn', passwordHash: docPass, roleName: 'doctor' });
     await Doctor.create({ userId: u2._id, clinicId: c2._id, specialtyId: s2._id, title: 'Thạc sĩ, Bác sĩ', price: 500000 });
     
+    logger.info('Seeding Patient...');
+    const patPass = await bcrypt.hash('patient123', 10);
+    const u3 = await User.create({ fullName: 'Bệnh Nhân Test', email: 'patient1@mediflow.com', passwordHash: patPass, roleName: 'patient' });
+    await Patient.create({ userId: u3._id });
+
     logger.info('✅ Seeding completed!');
     process.exit(0);
   } catch (err) {

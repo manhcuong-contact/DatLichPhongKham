@@ -27,17 +27,20 @@ const register = async ({ fullName, email, password, phone }) => {
   }
 
   const hashed = await bcrypt.hash(password, SALT_ROUNDS);
-  const user   = await userRepo.create({ fullName, email, password: hashed, phone, roleId: 3 });
+  const user   = await userRepo.create({ fullName, email, passwordHash: hashed, phone, roleName: 'patient' });
 
   // Tạo patient profile
-  await patRepo.create(user.id);
+  await patRepo.create(user._id);
 
-  const payload = { ...makePayload(user), roleName: 'patient' };
+  const payload = {
+    userId: user._id,
+    roleName: user.roleName,
+  };
   const accessToken  = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
-  await userRepo.updateRefreshToken(user.id, refreshToken);
+  await userRepo.updateRefreshToken(user._id, refreshToken);
 
-  const { password: _, ...safeUser } = user;
+  const { passwordHash: _, ...safeUser } = user.toObject ? user.toObject() : user;
   return { user: { ...safeUser, roleName: 'patient' }, accessToken, refreshToken };
 };
 
@@ -49,20 +52,22 @@ const login = async ({ email, password }) => {
     throw err;
   }
 
-  const match = await bcrypt.compare(password, user.password);
+  const match = await bcrypt.compare(password, user.passwordHash);
   if (!match) {
     const err = new Error('Email hoặc mật khẩu không đúng');
     err.statusCode = 401;
     throw err;
   }
 
-  await userRepo.updateLastLogin(user.id);
-  const payload = makePayload(user);
+  const payload = {
+    userId: user._id,
+    roleName: user.roleName,
+  };
   const accessToken  = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
-  await userRepo.updateRefreshToken(user.id, refreshToken);
+  await userRepo.updateRefreshToken(user._id, refreshToken);
 
-  const { password: _, refreshToken: __, ...safeUser } = user;
+  const { passwordHash: _, refreshToken: __, ...safeUser } = user;
   return { user: safeUser, accessToken, refreshToken };
 };
 
