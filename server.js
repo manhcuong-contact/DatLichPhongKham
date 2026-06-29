@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 // Khởi chạy cronjob
 scheduleReminders();
 
-app.listen(PORT, () => {
-  logger.info(`🚀 Server đang chạy tại http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  logger.info(`🚀 Server đang chạy tại cổng ${PORT}`);
   logger.info(`👉 API: http://localhost:${PORT}/api/`);
 });
