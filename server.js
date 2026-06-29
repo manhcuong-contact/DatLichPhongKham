@@ -1,6 +1,7 @@
 /**
  * server.js
  */
+global.crypto = require('crypto');
 const app = require('./app');
 const logger = require('./src/utils/logger');
 const { scheduleReminders } = require('./src/jobs/reminderJob');
