@@ -7,7 +7,14 @@ const findAll = async (filters = {}) => {
   if (filters.status) query.status = filters.status;
   if (filters.clinicId) query.clinicId = filters.clinicId;
   
-  let docs = Appointment.find(query)
+  const page = parseInt(filters.page) || 1;
+  const limit = parseInt(filters.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const total = await Appointment.countDocuments(query);
+  const totalPages = Math.ceil(total / limit);
+
+  const data = await Appointment.find(query)
     .populate('patientId', 'fullName email phone')
     .populate({
       path: 'doctorId',
@@ -15,11 +22,12 @@ const findAll = async (filters = {}) => {
       populate: { path: 'clinicId specialtyId' }
     })
     .populate('clinicId', 'name address')
-    .sort({ appointmentDate: -1, startTime: 1 });
+    .sort({ appointmentDate: -1, startTime: 1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
     
-  if (filters.limit) docs = docs.limit(parseInt(filters.limit));
-  
-  return docs.lean();
+  return { data, page, limit, total, totalPages };
 };
 
 const findById = async (id) => {

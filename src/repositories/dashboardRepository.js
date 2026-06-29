@@ -24,13 +24,14 @@ const getAdminStats = async () => {
   ]);
   
   return {
-    TotalPatients,
-    TotalDoctors,
-    TotalClinics,
-    TotalAppointments,
-    TodayAppointments,
-    PendingAppointments,
-    Revenue
+    totalPatients: TotalPatients,
+    totalDoctors: TotalDoctors,
+    totalClinics: TotalClinics,
+    totalAppointments: TotalAppointments,
+    totalAppointmentsThisMonth: TotalAppointments, // Assuming this for now, or implement a real count
+    todayAppointments: TodayAppointments,
+    pendingAppointments: PendingAppointments,
+    revenue: Revenue
   };
 };
 

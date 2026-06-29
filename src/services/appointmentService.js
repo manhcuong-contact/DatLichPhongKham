@@ -7,7 +7,7 @@ const doctorRepo      = require('../repositories/doctorRepository');
 const { sendMail, templates } = require('../helpers/emailHelper');
 
 const getAll = async (params) => {
-  return appointmentRepo.getAll(params);
+  return appointmentRepo.findAll(params);
 };
 
 const getById = async (id) => {
