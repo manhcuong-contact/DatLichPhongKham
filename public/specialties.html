@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyên khoa - MediFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-glass">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-heart-pulse-fill text-danger me-2"></i>MediFlow
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link fw-medium" href="/">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium text-primary" href="/specialties.html">Chuyên khoa</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium" href="/clinics.html">Phòng khám</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium" href="/doctors.html">Bác sĩ</a></li>
+                </ul>
+                <div id="nav-right" class="d-flex align-items-center"></div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5 pt-5 pb-5">
+        <div class="text-center mb-5 mt-4">
+            <h2 class="fw-bold">Danh sách Chuyên khoa</h2>
+            <p class="text-secondary">Tìm kiếm bác sĩ giỏi theo chuyên khoa phù hợp với tình trạng sức khỏe của bạn.</p>
+        </div>
+        
+        <div class="row g-4" id="specialtiesList">
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSpecialties();
+        });
+
+        async function loadSpecialties() {
+            try {
+                const res = await api.get('/specialties');
+                const container = document.getElementById('specialtiesList');
+                container.innerHTML = '';
+                
+                res.data.forEach(item => {
+                    container.innerHTML += `
+                        <div class="col-md-6 col-lg-3">
+                            <a href="/doctors.html?specialty=${item.id}" class="text-decoration-none">
+                                <div class="glass-card text-center p-4 h-100">
+                                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 70px; height: 70px;">
+                                        <i class="bi ${item.icon || 'bi-hospital'} fs-2"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-dark">${item.name}</h5>
+                                    <p class="text-secondary small mb-0">${item.description || 'Chăm sóc sức khỏe chuyên sâu'}</p>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+id,name,description,icon
+1,Nội khoa,Khám và điều trị các bệnh nội tạng tổng quát,stethoscope
+2,Ngoại khoa,Phẫu thuật và điều trị ngoại khoa,scalpel
+3,Nhi khoa,Chăm sóc sức khỏe cho trẻ em,baby
+4,Sản phụ khoa,Chăm sóc sức khỏe phụ nữ và thai sản,pregnant_woman
+5,Tim mạch,Khám và điều trị các bệnh tim mạch,favorite
+6,Thần kinh,Điều trị các bệnh về thần kinh và não bộ,psychology
+7,Da liễu,Khám và điều trị các bệnh về da,healing
+8,Mắt,Khám và điều trị các bệnh về mắt,visibility
+9,Tai mũi họng,Khám và điều trị tai mũi họng,hearing
+10,Cơ xương khớp,Điều trị các bệnh về xương khớp,accessibility

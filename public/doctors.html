@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách Bác sĩ - MediFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-glass">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-heart-pulse-fill text-danger me-2"></i>MediFlow
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link fw-medium" href="/">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium" href="/specialties.html">Chuyên khoa</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium" href="/clinics.html">Phòng khám</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium text-primary" href="/doctors.html">Bác sĩ</a></li>
+                </ul>
+                <div id="nav-right" class="d-flex align-items-center"></div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5 pt-5">
+        <!-- Search and Filter -->
+        <div class="glass-card p-4 mt-3 mb-4">
+            <form id="filterForm" class="row g-3 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
+                        <input type="text" class="form-control border-start-0" id="f_search" placeholder="Tên bác sĩ...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="f_specialty">
+                        <option value="">-- Tất cả chuyên khoa --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary-gradient w-100">Lọc kết quả</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="row g-4" id="doctorsList">
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0" style="border-radius: 1rem;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Đặt lịch khám</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <img id="b_docAvatar" src="" class="rounded-circle object-fit-cover me-3" width="60" height="60">
+                        <div>
+                            <h6 class="fw-bold mb-1" id="b_docName"></h6>
+                            <p class="text-secondary small mb-0" id="b_docSpecialty"></p>
+                        </div>
+                    </div>
+                    
+                    <form id="bookingForm">
+                        <input type="hidden" id="b_doctorId">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Chọn ngày khám</label>
+                            <input type="date" class="form-control" id="b_date" required min="">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Giờ trống</label>
+                            <div id="slotsContainer" class="d-flex flex-wrap gap-2">
+                                <span class="text-secondary small">Vui lòng chọn ngày trước</span>
+                            </div>
+                            <input type="hidden" id="b_startTime" required>
+                            <input type="hidden" id="b_endTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Triệu chứng (tùy chọn)</label>
+                            <textarea class="form-control" id="b_symptoms" rows="3" placeholder="Mô tả triệu chứng của bạn..."></textarea>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary-gradient" id="btnBook">Xác nhận đặt lịch</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        let allDoctors = [];
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('b_date').min = todayStr;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDropdowns();
+            
+            // Check URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.has('search')) document.getElementById('f_search').value = urlParams.get('search');
+            if(urlParams.has('specialty')) document.getElementById('f_specialty').value = urlParams.get('specialty');
+            
+            loadDoctors();
+        });
+
+        async function loadDropdowns() {
+            try {
+                const specRes = await api.get('/specialties');
+                const sel = document.getElementById('f_specialty');
+                specRes.data.forEach(s => {
+                    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                });
+            } catch(e) {}
+        }
+
+        document.getElementById('filterForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            loadDoctors();
+        });
+
+        async function loadDoctors() {
+            try {
+                const search = document.getElementById('f_search').value;
+                const specialtyId = document.getElementById('f_specialty').value;
+                
+                let endpoint = '/doctors?limit=50';
+                if (search) endpoint += `&search=${encodeURIComponent(search)}`;
+                if (specialtyId) endpoint += `&specialtyId=${specialtyId}`;
+                
+                const res = await api.get(endpoint);
+                allDoctors = res.data;
+                renderDoctors(allDoctors);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderDoctors(docs) {
+            const container = document.getElementById('doctorsList');
+            if(docs.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center py-5 text-secondary">Không tìm thấy bác sĩ phù hợp</div>`;
+                return;
+            }
+            
+            container.innerHTML = '';
+            docs.forEach(d => {
+                const avatar = d.avatarUrl ? '/uploads/'+d.avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(d.fullName)}`;
+                const fee = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(d.consultationFee);
+                
+                container.innerHTML += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="glass-card h-100 p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="${avatar}" class="rounded-circle object-fit-cover shadow-sm me-3" width="70" height="70">
+                                <div>
+                                    <h5 class="fw-bold mb-1">${d.fullName}</h5>
+                                    <span class="badge badge-soft-primary mb-1">${d.degree || 'Bác sĩ'}</span>
+                                </div>
+                            </div>
+                            <div class="small text-secondary mb-3">
+                                <p class="mb-1"><i class="bi bi-heart-pulse text-danger me-2"></i> ${d.specialtyName}</p>
+                                <p class="mb-1"><i class="bi bi-hospital text-primary me-2"></i> ${d.clinicName}</p>
+                                <p class="mb-1"><i class="bi bi-geo-alt me-2"></i> ${d.clinicAddress}</p>
+                                <p class="mb-0 text-success fw-medium"><i class="bi bi-cash me-2"></i> Phí: ${fee}</p>
+                            </div>
+                            <button class="btn btn-outline-primary rounded-pill w-100 mt-2" onclick="openBooking(${d.id})">Đặt lịch ngay</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openBooking(id) {
+            const user = api.getUser();
+            if (!user) {
+                window.location.href = `/login.html?redirect=/doctors.html`;
+                return;
+            }
+            if (user.roleName !== 'patient') {
+                api.showToast('Chỉ bệnh nhân mới có thể đặt lịch', 'error');
+                return;
+            }
+
+            const doc = allDoctors.find(x => x.id === id);
+            document.getElementById('b_doctorId').value = doc.id;
+            document.getElementById('b_docName').textContent = doc.fullName;
+            document.getElementById('b_docSpecialty').textContent = doc.specialtyName;
+            document.getElementById('b_docAvatar').src = doc.avatarUrl ? '/uploads/'+doc.avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}`;
+            
+            // reset form
+            document.getElementById('b_date').value = '';
+            document.getElementById('slotsContainer').innerHTML = '<span class="text-secondary small">Vui lòng chọn ngày trước</span>';
+            document.getElementById('b_startTime').value = '';
+            document.getElementById('b_endTime').value = '';
+            
+            new bootstrap.Modal(document.getElementById('bookingModal')).show();
+        }
+
+        document.getElementById('b_date').addEventListener('change', async (e) => {
+            const date = e.target.value;
+            const docId = document.getElementById('b_doctorId').value;
+            if(!date || !docId) return;
+            
+            const slotsContainer = document.getElementById('slotsContainer');
+            slotsContainer.innerHTML = '<span class="spinner-border spinner-border-sm text-primary"></span>';
+            
+            try {
+                const res = await api.get(`/appointments/slots?doctorId=${docId}&date=${date}`);
+                
+                if (res.data.length === 0) {
+                    slotsContainer.innerHTML = '<span class="text-danger small">Bác sĩ không có lịch làm việc hoặc đã kín chỗ vào ngày này.</span>';
+                    return;
+                }
+                
+                slotsContainer.innerHTML = '';
+                res.data.forEach((slot, idx) => {
+                    const id = `slot_${idx}`;
+                    slotsContainer.innerHTML += `
+                        <input type="radio" class="btn-check" name="slotRadio" id="${id}" autocomplete="off" value="${slot.startTime}|${slot.endTime}">
+                        <label class="btn btn-outline-primary btn-sm rounded-pill px-3" for="${id}">${slot.startTime.substring(0,5)} - ${slot.endTime.substring(0,5)}</label>
+                    `;
+                });
+
+                // Add event listeners to radios
+                document.querySelectorAll('input[name="slotRadio"]').forEach(r => {
+                    r.addEventListener('change', (e) => {
+                        const [st, et] = e.target.value.split('|');
+                        document.getElementById('b_startTime').value = st;
+                        document.getElementById('b_endTime').value = et;
+                    });
+                });
+            } catch (err) {
+                slotsContainer.innerHTML = '<span class="text-danger small">Lỗi tải giờ trống.</span>';
+            }
+        });
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if(!document.getElementById('b_startTime').value) {
+                api.showToast('Vui lòng chọn một khung giờ', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('btnBook');
+            btn.disabled = true;
+            
+            try {
+                await api.post('/appointments', {
+                    doctorId: parseInt(document.getElementById('b_doctorId').value),
+                    appointmentDate: document.getElementById('b_date').value,
+                    startTime: document.getElementById('b_startTime').value.substring(0,5),
+                    endTime: document.getElementById('b_endTime').value.substring(0,5),
+                    symptoms: document.getElementById('b_symptoms').value
+                });
+                
+                api.showToast('Đặt lịch khám thành công! Cảm ơn bạn.');
+                bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
+            } catch (err) {
+                api.showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

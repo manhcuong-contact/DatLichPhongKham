@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - MediFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f1f5f9; }
+        .sidebar { width: 260px; min-height: 100vh; background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); position: fixed; left: 0; top: 0; padding: 1.5rem 1rem; z-index: 100; }
+        .sidebar .logo { color: #fff; font-size: 1.3rem; font-weight: 800; padding: .5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: .5rem; }
+        .sidebar .logo i { color: #f87171; }
+        .nav-link-side { display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-radius: .75rem; color: #94a3b8; font-weight: 500; text-decoration: none; margin-bottom: .25rem; transition: all .2s; }
+        .nav-link-side:hover, .nav-link-side.active { background: rgba(255,255,255,.1); color: #fff; }
+        .nav-link-side i { width: 20px; text-align: center; }
+        .main-content { margin-left: 260px; padding: 2rem; min-height: 100vh; }
+        .stat-card { background: #fff; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: none; }
+        .stat-card .icon-box { width: 52px; height: 52px; border-radius: .75rem; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .stat-card .stat-value { font-size: 2rem; font-weight: 800; }
+        .glass-table { background: #fff; border-radius: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .user-bar { background: #fff; border-radius: 1rem; padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .badge-status { font-size: .75rem; padding: .3rem .7rem; border-radius: 2rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="logo">
+        <i class="bi bi-heart-pulse-fill"></i>
+        MediFlow
+    </div>
+    <a href="/admin/dashboard.html" class="nav-link-side active">
+        <i class="bi bi-speedometer2"></i> Tổng quan
+    </a>
+    <a href="/admin/appointments.html" class="nav-link-side">
+        <i class="bi bi-calendar-check"></i> Quản lý lịch hẹn
+    </a>
+    <a href="/admin/patients.html" class="nav-link-side">
+        <i class="bi bi-people"></i> Danh sách bệnh nhân
+    </a>
+    <hr style="border-color:rgba(255,255,255,.1); margin: 1rem 0;">
+    <a href="#" class="nav-link-side text-danger" onclick="doLogout()">
+        <i class="bi bi-box-arrow-left"></i> Đăng xuất
+    </a>
+</div>
+
+<!-- Main -->
+<div class="main-content">
+    <!-- Top Bar -->
+    <div class="user-bar">
+        <div>
+            <h5 class="mb-0 fw-bold">Bảng điều khiển Admin</h5>
+            <small class="text-secondary" id="greeting">Chào mừng!</small>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-success-subtle text-success badge-status"><i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>Online</span>
+            <img id="avatar" src="https://ui-avatars.com/api/?name=Admin&background=3b5de7&color=fff" class="rounded-circle" width="40" height="40" alt="avatar">
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary"><i class="bi bi-people"></i></div>
+                    <span class="text-success small fw-semibold">+12%</span>
+                </div>
+                <div class="stat-value text-primary" id="s-patients">—</div>
+                <div class="text-secondary small mt-1">Tổng Bệnh nhân</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="icon-box bg-success bg-opacity-10 text-success"><i class="bi bi-person-badge"></i></div>
+                    <span class="text-success small fw-semibold">Active</span>
+                </div>
+                <div class="stat-value text-success" id="s-doctors">—</div>
+                <div class="text-secondary small mt-1">Tổng Bác sĩ</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning"><i class="bi bi-hospital"></i></div>
+                    <span class="text-warning small fw-semibold">Phòng khám</span>
+                </div>
+                <div class="stat-value text-warning" id="s-clinics">—</div>
+                <div class="text-secondary small mt-1">Phòng khám</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="icon-box bg-danger bg-opacity-10 text-danger"><i class="bi bi-calendar-check"></i></div>
+                    <span class="text-danger small fw-semibold" id="s-pending">0 chờ</span>
+                </div>
+                <div class="stat-value text-danger" id="s-appts">—</div>
+                <div class="text-secondary small mt-1">Lịch hẹn tháng này</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Appointments -->
+    <div class="glass-table p-0 overflow-hidden">
+        <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+            <h6 class="fw-bold mb-0">Lịch hẹn gần đây</h6>
+            <a href="/admin/appointments.html" class="btn btn-sm btn-outline-primary rounded-pill px-3">Xem tất cả</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Bệnh nhân</th>
+                        <th>Bác sĩ</th>
+                        <th>Ngày khám</th>
+                        <th>Trạng thái</th>
+                        <th class="pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-appts">
+                    <tr><td colspan="5" class="text-center py-4"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const TOKEN_KEY = 'token';
+    const USER_KEY  = 'user';
+
+    function getUser() {
+        try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch(e) { return null; }
+    }
+    function getToken() { return localStorage.getItem(TOKEN_KEY); }
+
+    async function apiGet(path) {
+        const r = await fetch('/api' + path, {
+            headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+    }
+
+    function doLogout() {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        window.location.href = '/login.html';
+    }
+
+    // INIT
+    const user = getUser();
+    if (!user) {
+        // No user in localStorage - show message instead of redirect
+        document.body.innerHTML = '<div class="d-flex align-items-center justify-content-center min-vh-100"><div class="text-center p-5 bg-white rounded-4 shadow"><i class="bi bi-lock-fill text-danger fs-1 mb-3 d-block"></i><h5>Chưa đăng nhập</h5><p class="text-secondary">Vui lòng đăng nhập để tiếp tục</p><a href="/login.html" class="btn btn-primary rounded-pill px-4">Đăng nhập ngay</a></div></div>';
+    } else {
+        document.getElementById('greeting').textContent = 'Xin chào, ' + user.fullName + '!';
+        if (user.avatarUrl) {
+            document.getElementById('avatar').src = '/uploads/' + user.avatarUrl;
+        } else {
+            document.getElementById('avatar').src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.fullName) + '&background=3b5de7&color=fff';
+        }
+        loadStats();
+        loadRecentAppts();
+    }
+
+    async function loadStats() {
+        try {
+            const res = await apiGet('/dashboard/admin');
+            const d = res.data;
+            document.getElementById('s-patients').textContent = d.totalPatients;
+            document.getElementById('s-doctors').textContent  = d.totalDoctors;
+            document.getElementById('s-clinics').textContent  = d.totalClinics;
+            document.getElementById('s-appts').textContent    = d.totalAppointmentsThisMonth;
+            document.getElementById('s-pending').textContent  = d.pendingAppointments + ' chờ duyệt';
+        } catch(e) {
+            console.error('Dashboard stats error:', e);
+        }
+    }
+
+    async function loadRecentAppts() {
+        const tbody = document.getElementById('recent-appts');
+        try {
+            const res = await apiGet('/appointments?limit=5&status=pending');
+            const list = res.data || [];
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-secondary">Không có lịch hẹn nào đang chờ</td></tr>';
+                return;
+            }
+            tbody.innerHTML = list.map(a => {
+                const dt = new Date(a.appointmentDate).toLocaleDateString('vi-VN');
+                const time = (a.startTime||'').substring(0,5);
+                return `<tr>
+                    <td class="ps-4"><div class="fw-semibold">${a.patientName||'N/A'}</div><small class="text-secondary">${a.patientPhone||''}</small></td>
+                    <td><div>${a.doctorName||'N/A'}</div><small class="text-secondary">${a.clinicName||''}</small></td>
+                    <td>${dt} <span class="text-secondary small">${time}</span></td>
+                    <td><span class="badge bg-warning text-dark badge-status">Chờ xác nhận</span></td>
+                    <td class="pe-4"><a href="/admin/appointments.html" class="btn btn-sm btn-outline-primary rounded-pill">Xử lý</a></td>
+                </tr>`;
+            }).join('');
+        } catch(e) {
+            console.error('Load appts error:', e);
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-secondary">Không thể tải dữ liệu</td></tr>';
+        }
+    }
+</script>
+</body>
+</html>

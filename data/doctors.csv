@@ -1,0 +1,11 @@
+id,fullName,email,phone,specialtyId,clinicId,degree,experience,bio,consultationFee,avatarUrl,rating
+1,BS. Nguyễn Văn An,bs.nguyenan@medcare.vn,0901234567,1,1,Tiến sĩ Y khoa,15,Chuyên gia nội khoa với 15 năm kinh nghiệm điều trị các bệnh mãn tính,300000,,4.9
+2,BS. Trần Thị Bình,bs.tranbinh@vietphap.vn,0912345678,5,2,Thạc sĩ Tim mạch,12,Bác sĩ tim mạch can thiệp được đào tạo tại Pháp,500000,,4.8
+3,BS. Lê Minh Cường,bs.lecuong@fv.vn,0923456789,3,3,Tiến sĩ Nhi khoa,18,Chuyên gia Nhi khoa hàng đầu TP.HCM,400000,,4.9
+4,BS. Phạm Thị Dung,bs.phamdung@bachmai.vn,0934567890,4,4,Bác sĩ Chuyên khoa II,20,Sản phụ khoa với kinh nghiệm 20 năm,350000,,4.7
+5,BS. Hoàng Văn Em,bs.hoanem@careplus.vn,0945678901,6,5,Thạc sĩ Thần kinh học,10,Chuyên điều trị đột quỵ và các bệnh thần kinh,450000,,4.6
+6,BS. Ngô Thị Phương,bs.ngophuong@huunghi.vn,0956789012,7,6,Bác sĩ Chuyên khoa I,8,Da liễu thẩm mỹ và điều trị bệnh da mãn tính,300000,,4.7
+7,BS. Đinh Văn Giang,bs.dinhgiang@nhidong.vn,0967890123,3,7,Tiến sĩ Nhi khoa,22,Giám đốc khoa Nhi - chuyên bệnh hô hấp trẻ em,350000,,5.0
+8,BS. Bùi Thị Hoa,bs.buihoa@timhn.vn,0978901234,5,8,Thạc sĩ Tim mạch,14,Chuyên gia siêu âm tim và điều trị rối loạn nhịp,500000,,4.8
+9,BS. Vũ Minh Khoa,bs.vukhoa@medcare.vn,0989012345,2,1,Bác sĩ Chuyên khoa I,9,Ngoại khoa tổng quát và phẫu thuật nội soi,400000,,4.6
+10,BS. Đặng Thị Lan,bs.danglan@vietphap.vn,0990123456,8,2,Thạc sĩ Nhãn khoa,11,Điều trị các bệnh võng mạc và phẫu thuật mắt,450000,,4.8

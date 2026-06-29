@@ -1,0 +1,9 @@
+id,fullName,email,phone,dateOfBirth,gender,address,bloodType,allergies,insuranceNumber
+1,Nguyễn Thị Mai,mai.nguyen@gmail.com,0901111111,1990-05-15,female,45 Lý Thường Kiệt Hà Nội,A+,Penicillin,BH123456
+2,Trần Văn Hùng,hung.tran@gmail.com,0912222222,1985-08-22,male,78 Hoàng Văn Thụ TP.HCM,O+,,BH234567
+3,Lê Thị Hương,huong.le@gmail.com,0923333333,1995-12-03,female,23 Trần Phú Đà Nẵng,B+,Aspirin,BH345678
+4,Phạm Quốc Tuấn,tuan.pham@gmail.com,0934444444,1978-03-18,male,12 Nguyễn Huệ TP.HCM,AB+,,BH456789
+5,Hoàng Thị Linh,linh.hoang@gmail.com,0945555555,2001-07-09,female,56 Đinh Tiên Hoàng Hà Nội,O-,,BH567890
+6,Ngô Văn Tùng,tung.ngo@gmail.com,0956666666,1969-11-25,male,89 Lê Lợi Huế,A-,Sulfa,BH678901
+7,Vũ Thị Thu,thu.vu@gmail.com,0967777777,1992-02-14,female,34 Bà Triệu Hà Nội,B-,,BH789012
+8,Bùi Đức Nam,nam.bui@gmail.com,0978888888,1988-09-30,male,67 Hai Bà Trưng TP.HCM,AB-,,BH890123

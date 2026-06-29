@@ -1,0 +1,9 @@
+id,name,address,district,city,phone,email,latitude,longitude,rating,openTime,closeTime,description
+1,Phòng khám Đa khoa Medcare,123 Nguyễn Trãi,Quận 1,Hồ Chí Minh,028-3823-1234,medcare@clinic.vn,10.7769,106.6952,4.8,07:00,21:00,Phòng khám đa khoa hiện đại với đầy đủ chuyên khoa
+2,Bệnh viện Quốc tế Việt Pháp,6 Ngô Quyền,Hoàn Kiếm,Hà Nội,024-3577-1100,vietphap@hospital.vn,21.0285,105.8542,4.9,08:00,20:00,Bệnh viện đạt chuẩn quốc tế Pháp
+3,Phòng khám Gia đình FV,6 Nguyễn Lương Bằng,Quận 7,Hồ Chí Minh,028-5411-3333,fv@clinic.vn,10.7295,106.7231,4.7,07:30,21:30,Chăm sóc sức khỏe toàn diện cho cả gia đình
+4,Bệnh viện Bạch Mai,78 Giải Phóng,Đống Đa,Hà Nội,024-3869-3731,bachmai@hospital.vn,21.0014,105.8412,4.6,00:00,23:59,Bệnh viện đa khoa tuyến Trung ương
+5,Phòng khám CarePlus,107A Trương Định,Quận 3,Hồ Chí Minh,028-3622-4999,careplus@clinic.vn,10.7765,106.6876,4.8,07:00,22:00,Hệ thống phòng khám hiện đại theo tiêu chuẩn Singapore
+6,Bệnh viện Hữu Nghị,1 Trần Khánh Dư,Hai Bà Trưng,Hà Nội,024-3843-5012,huunghi@hospital.vn,21.0220,105.8580,4.5,00:00,23:59,Bệnh viện Trung ương phục vụ cán bộ và nhân dân
+7,Phòng khám Nhi Đồng 1,341 Sư Vạn Hạnh,Quận 10,Hồ Chí Minh,028-3927-1119,nhidong@clinic.vn,10.7708,106.6653,4.9,07:00,20:00,Chuyên khoa Nhi hàng đầu tại TP.HCM
+8,Bệnh viện Tim Hà Nội,92 Trần Hưng Đạo,Hoàn Kiếm,Hà Nội,024-3825-3531,timhn@hospital.vn,21.0278,105.8463,4.7,00:00,23:59,Bệnh viện chuyên khoa Tim mạch

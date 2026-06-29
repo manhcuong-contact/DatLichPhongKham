@@ -1,0 +1,36 @@
+2026-06-29 13:25:25 [error]: ❌ Lỗi khi seed: Login failed for user 'cuong'.
+SequelizeAccessDeniedError: Login failed for user 'cuong'.
+    at ConnectionManager.connect (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\dialects\mssql\connection-manager.js:115:17)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async ConnectionManager._connect (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\dialects\abstract\connection-manager.js:222:24)
+    at async C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\dialects\abstract\connection-manager.js:174:32
+    at async ConnectionManager.getConnection (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\dialects\abstract\connection-manager.js:197:7)
+    at async C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\sequelize.js:305:26
+    at async Sequelize.authenticate (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\sequelize.js:457:5)
+    at async seed (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\src\utils\seeder.js:171:5)
+2026-06-29 13:25:33 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 13:27:23 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 13:31:17 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 13:33:23 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 13:33:40 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 13:39:42 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 13:44:14 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 13:44:18 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 13:46:30 [error]: ❌ Không thể kết nối SQL Server:
+2026-06-29 14:00:25 [error]: ❌ Không thể khởi động server:
+Error
+    at Query.run (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\dialects\mssql\query.js:107:25)
+    at C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async MSSqlQueryInterface.createTable (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\dialects\abstract\query-interface.js:98:12)
+    at async Appointment.sync (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\model.js:942:7)
+    at async Sequelize.sync (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\sequelize.js:377:9)
+    at async startServer (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\server.js:30:5)
+2026-06-29 14:14:52 [error]: ❌ Lỗi khi seed: Incorrect syntax near the keyword 'UNIQUE'.
+Error
+    at Query.run (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\dialects\mssql\query.js:107:25)
+    at C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Specialty.sync (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\model.js:984:11)
+    at async Sequelize.sync (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\node_modules\sequelize\lib\sequelize.js:377:9)
+    at async seed (C:\Users\NC\Downloads\mediflow_phase5_final\mediflow-backend\src\utils\seeder.js:175:5)
