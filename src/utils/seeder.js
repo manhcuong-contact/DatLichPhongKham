@@ -44,7 +44,7 @@ const seedDB = async () => {
     await Doctor.create({ userId: u2._id, clinicId: c2._id, specialtyId: s2._id, title: 'Thạc sĩ, Bác sĩ', price: 500000 });
     
     logger.info('Seeding Patient...');
-    const patPass = await bcrypt.hash('patient123', 10);
+    const patPass = await bcrypt.hash('Admin@123456', 10);
     const u3 = await User.create({ fullName: 'Bệnh Nhân Test', email: 'patient1@mediflow.com', passwordHash: patPass, roleName: 'patient' });
     await Patient.create({ userId: u3._id });
 

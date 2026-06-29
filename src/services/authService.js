@@ -30,7 +30,7 @@ const register = async ({ fullName, email, password, phone }) => {
   const user   = await userRepo.create({ fullName, email, passwordHash: hashed, phone, roleName: 'patient' });
 
   // Tạo patient profile
-  await patRepo.create(user._id);
+  await patRepo.create({ userId: user._id });
 
   const payload = {
     userId: user._id,
