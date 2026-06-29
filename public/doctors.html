@@ -127,7 +127,7 @@
                 const specRes = await api.get('/specialties');
                 const sel = document.getElementById('f_specialty');
                 specRes.data.forEach(s => {
-                    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                    sel.innerHTML += `<option value="${s._id}">${s.name}</option>`;
                 });
             } catch(e) {}
         }

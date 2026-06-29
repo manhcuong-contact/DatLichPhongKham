@@ -79,7 +79,7 @@ const getAvailableSlots = async (req, res) => {
   try {
     const { doctorId, date } = req.query;
     if (!doctorId || !date) return R.badRequest(res, 'Thiếu doctorId hoặc date');
-    const data = await appointmentService.getAvailableSlots(parseInt(doctorId), date);
+    const data = await appointmentService.getAvailableSlots(doctorId, date);
     return R.success(res, data, 'Lấy danh sách giờ trống thành công');
   } catch (e) { return R.error(res, e.message, 500); }
 };

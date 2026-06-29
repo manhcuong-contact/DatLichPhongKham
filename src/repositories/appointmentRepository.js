@@ -90,11 +90,77 @@ const checkConflict = async (doctorId, date, startTime, endTime) => {
   return false;
 };
 
+const getAvailableSlots = async (doctorId, date) => {
+  // Define default slots (e.g., 08:00 to 17:00, 30 min each)
+  const defaultSlots = [
+    { startTime: '08:00', endTime: '08:30' },
+    { startTime: '08:30', endTime: '09:00' },
+    { startTime: '09:00', endTime: '09:30' },
+    { startTime: '09:30', endTime: '10:00' },
+    { startTime: '10:00', endTime: '10:30' },
+    { startTime: '10:30', endTime: '11:00' },
+    { startTime: '11:00', endTime: '11:30' },
+    { startTime: '11:30', endTime: '12:00' },
+    { startTime: '13:00', endTime: '13:30' },
+    { startTime: '13:30', endTime: '14:00' },
+    { startTime: '14:00', endTime: '14:30' },
+    { startTime: '14:30', endTime: '15:00' },
+    { startTime: '15:00', endTime: '15:30' },
+    { startTime: '15:30', endTime: '16:00' },
+    { startTime: '16:00', endTime: '16:30' },
+    { startTime: '16:30', endTime: '17:00' }
+  ];
+
+  const start = new Date(date);
+  start.setHours(0,0,0,0);
+  const end = new Date(date);
+  end.setHours(23,59,59,999);
+  
+  const existingApts = await Appointment.find({
+    doctorId,
+    appointmentDate: { $gte: start, $lte: end },
+    status: { $ne: 'cancelled' }
+  }).lean();
+
+  const toMinutes = (timeStr) => {
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const now = new Date();
+  // We use current time in UTC+7 for Vietnam, but usually server is in some timezone
+  // For safety, let's just use server local time
+  const isToday = start.toDateString() === now.toDateString();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  return defaultSlots.filter(slot => {
+    const slotStartMin = toMinutes(slot.startTime);
+    const slotEndMin = toMinutes(slot.endTime);
+
+    // Filter out past slots if the date is today
+    if (isToday && slotStartMin <= currentMinutes) {
+      return false;
+    }
+
+    // Filter out slots that conflict with existing appointments
+    for (const apt of existingApts) {
+      const extStart = toMinutes(apt.startTime);
+      const extEnd = toMinutes(apt.endTime);
+      if (slotStartMin < extEnd && slotEndMin > extStart) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+};
+
 module.exports = {
   findAll,
   findById,
   create,
   updateStatus,
   getStats,
-  checkConflict
+  checkConflict,
+  getAvailableSlots
 };
