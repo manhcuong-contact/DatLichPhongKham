@@ -72,6 +72,23 @@ const updateStatus = async (id, status, extraData) => {
 
   await appointmentRepo.updateStatus(id, status, extraData);
 
+  // Tự động lưu lịch sử khám nếu hoàn thành
+  if (status === 'completed') {
+    try {
+      const historyRepo = require('../repositories/medicalHistoryRepository');
+      await historyRepo.create({
+        patientId: appointment.patientId?._id || appointment.patientId,
+        appointmentId: id,
+        doctorId: appointment.doctorId?._id || appointment.doctorId,
+        diagnosis: extraData?.diagnosis || 'Hoàn thành khám bệnh',
+        prescription: extraData?.prescription || '',
+        treatmentPlan: extraData?.note || ''
+      });
+    } catch (err) {
+      require('../utils/logger').error(`[History] Lỗi lưu lịch sử khám: ${err.message}`);
+    }
+  }
+
   // Gửi email thông báo qua Brevo
   try {
     const updatedAppt = await appointmentRepo.findById(id);
