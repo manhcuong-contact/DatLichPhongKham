@@ -6,7 +6,7 @@ const userRepo   = require('../repositories/userRepository');
 const doctorRepo = require('../repositories/doctorRepository');
 
 const getAll = async (params) => {
-  return doctorRepo.getAll(params);
+  return doctorRepo.findAll(params);
 };
 
 const getById = async (id) => {

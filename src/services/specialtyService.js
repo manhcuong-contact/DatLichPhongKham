@@ -4,7 +4,7 @@
 const specialtyRepo = require('../repositories/specialtyRepository');
 
 const getAll = async (activeOnly = false) => {
-  return specialtyRepo.getAll(activeOnly);
+  return specialtyRepo.findAll(activeOnly ? {} : undefined);
 };
 
 const getById = async (id) => {

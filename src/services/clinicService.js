@@ -5,7 +5,7 @@ const clinicRepo = require('../repositories/clinicRepository');
 const haversine  = require('../utils/haversine');
 
 const getAll = async (params) => {
-  return clinicRepo.getAll(params);
+  return clinicRepo.findAll(params);
 };
 
 const getById = async (id) => {
@@ -31,16 +31,7 @@ const remove = async (id) => {
 };
 
 const getNearby = async (userLat, userLng, radiusKm = 10) => {
-  const clinics = await clinicRepo.getAllWithCoords();
-  
-  const withDistance = clinics.map(c => {
-    const distance = haversine(userLat, userLng, c.latitude, c.longitude);
-    return { ...c, distance };
-  });
-
-  return withDistance
-    .filter(c => c.distance <= radiusKm)
-    .sort((a, b) => a.distance - b.distance);
+  return clinicRepo.findNearby(userLat, userLng, radiusKm);
 };
 
 module.exports = { getAll, getById, create, update, remove, getNearby };
