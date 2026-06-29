@@ -30,6 +30,12 @@ const findAll = async (filters = {}) => {
   doctors.forEach(doc => { doctorMap[doc.userId.toString()] = doc; });
 
   data.forEach(d => {
+    d.id = d._id;
+    d.patientName = d.patientId?.fullName || '';
+    d.patientPhone = d.patientId?.phone || '';
+    d.doctorName = d.doctorId?.fullName || '';
+    d.clinicName = d.clinicId?.name || '';
+
     if (d.doctorId && doctorMap[d.doctorId._id.toString()]) {
       const doc = doctorMap[d.doctorId._id.toString()];
       d.specialtyName = doc.specialtyId?.name || '';
@@ -40,11 +46,20 @@ const findAll = async (filters = {}) => {
 };
 
 const findById = async (id) => {
-  return Appointment.findById(id)
+  const d = await Appointment.findById(id)
     .populate('patientId', 'fullName email phone')
     .populate('doctorId', 'fullName')
     .populate('clinicId', 'name address')
     .lean();
+
+  if (d) {
+    d.id = d._id;
+    d.patientName = d.patientId?.fullName || '';
+    d.patientPhone = d.patientId?.phone || '';
+    d.doctorName = d.doctorId?.fullName || '';
+    d.clinicName = d.clinicId?.name || '';
+  }
+  return d;
 };
 
 const create = async (data) => {

@@ -3,16 +3,29 @@
  * Chuẩn hoá response REST API
  */
 
+const mapId = (obj) => {
+  if (!obj) return obj;
+  if (Array.isArray(obj)) {
+    obj.forEach(mapId);
+  } else if (typeof obj === 'object' && obj.constructor === Object) {
+    if (obj._id !== undefined && obj.id === undefined) {
+      obj.id = obj._id.toString();
+    }
+    Object.values(obj).forEach(mapId);
+  }
+  return obj;
+};
+
 const success = (res, data = null, message = 'Thành công', statusCode = 200) => {
-  return res.status(statusCode).json({ success: true, message, data });
+  return res.status(statusCode).json({ success: true, message, data: mapId(data) });
 };
 
 const created = (res, data = null, message = 'Tạo thành công') => {
-  return res.status(201).json({ success: true, message, data });
+  return res.status(201).json({ success: true, message, data: mapId(data) });
 };
 
 const paginated = (res, data, pagination, message = 'Thành công') => {
-  return res.status(200).json({ success: true, message, data, pagination });
+  return res.status(200).json({ success: true, message, data: mapId(data), pagination });
 };
 
 const error = (res, message = 'Lỗi server', statusCode = 500, errors = null) => {
