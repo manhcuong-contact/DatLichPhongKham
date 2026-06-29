@@ -35,7 +35,7 @@ const update = async (userId, data) => {
   const patient = await patientRepo.findByUserId(userId);
   if (!patient) throw Object.assign(new Error('Không tìm thấy hồ sơ bệnh nhân'), { statusCode: 404 });
 
-  await patientRepo.update(userId, {
+  await patientRepo.updateByUserId(userId, {
     dateOfBirth:      data.dateOfBirth      || patient.dateOfBirth,
     gender:           data.gender           || patient.gender,
     address:          data.address          || patient.address,
