@@ -25,30 +25,37 @@ const bookAppointment = async (userId, data) => {
   const doctor = await doctorRepo.findById(data.doctorId);
   if (!doctor) throw Object.assign(new Error('Không tìm thấy bác sĩ'), { statusCode: 404 });
 
-  const result = await appointmentRepo.bookAppointment({
-    patientId:       patient.id,
-    doctorId:        doctor.doctorId,
-    clinicId:        doctor.clinicId,
-    specialtyId:     doctor.specialtyId,
+  // Check conflict
+  const isConflict = await appointmentRepo.checkConflict(doctor._id, data.appointmentDate, data.startTime, data.endTime);
+  if (isConflict) throw Object.assign(new Error('Khung giờ này đã có người đặt'), { statusCode: 409 });
+
+  const appointmentData = {
+    patientId:       userId,
+    doctorId:        doctor.userId ? (doctor.userId._id || doctor.userId) : doctor._id,
+    clinicId:        doctor.clinicId ? (doctor.clinicId._id || doctor.clinicId) : null,
     appointmentDate: data.appointmentDate,
     startTime:       data.startTime,
     endTime:         data.endTime,
-    symptoms:        data.symptoms,
-    fee:             doctor.consultationFee,
-  });
+    reason:          data.symptoms,
+    status:          'pending'
+  };
 
-  if (result.errorMsg) {
-    throw Object.assign(new Error(result.errorMsg), { statusCode: 409 });
+  const newApt = await appointmentRepo.create(appointmentData);
+
+  // Gửi email xác nhận (Optional - if mail is configured)
+  try {
+    const templates = require('../utils/emailTemplates');
+    const { sendMail } = require('../utils/mailer');
+    const appointmentFull = await appointmentRepo.findById(newApt._id);
+    if (appointmentFull && patient.email) {
+      const emailData = templates.appointmentConfirmation(appointmentFull);
+      await sendMail({ to: patient.email, ...emailData });
+    }
+  } catch(e) {
+    console.error('Lỗi gửi email:', e.message);
   }
 
-  // Gửi email xác nhận
-  const appointment = await appointmentRepo.findById(result.newId);
-  if (appointment && patient.email) {
-    const emailData = templates.appointmentConfirmation(appointment);
-    await sendMail({ to: patient.email, ...emailData }).catch(e => console.error('Lỗi gửi email:', e));
-  }
-
-  return appointment;
+  return newApt;
 };
 
 const updateStatus = async (id, status, extraData) => {
