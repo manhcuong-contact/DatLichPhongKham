@@ -5,13 +5,13 @@ const { body } = require('express-validator');
 
 const register = [
   body('fullName').notEmpty().withMessage('Họ tên không được để trống').trim().escape(),
-  body('email').isEmail().withMessage('Email không hợp lệ').normalizeEmail(),
+  body('email').isEmail().withMessage('Email không hợp lệ').toLowerCase().trim(),
   body('password').isLength({ min: 6 }).withMessage('Mật khẩu ít nhất 6 ký tự'),
   body('phone').optional().isMobilePhone('vi-VN').withMessage('Số điện thoại không hợp lệ'),
 ];
 
 const login = [
-  body('email').notEmpty().withMessage('Email không được để trống'),
+  body('email').notEmpty().withMessage('Email không được để trống').toLowerCase().trim(),
   body('password').notEmpty().withMessage('Mật khẩu không được để trống'),
 ];
 
