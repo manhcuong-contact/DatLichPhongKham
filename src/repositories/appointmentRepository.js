@@ -16,16 +16,25 @@ const findAll = async (filters = {}) => {
 
   const data = await Appointment.find(query)
     .populate('patientId', 'fullName email phone')
-    .populate({
-      path: 'doctorId',
-      select: 'fullName',
-      populate: { path: 'clinicId specialtyId' }
-    })
+    .populate('doctorId', 'fullName')
     .populate('clinicId', 'name address')
     .sort({ appointmentDate: -1, startTime: 1 })
     .skip(skip)
     .limit(limit)
     .lean();
+
+  // Attach specialtyName
+  const doctorIds = data.map(d => d.doctorId?._id).filter(Boolean);
+  const doctors = await Doctor.find({ userId: { $in: doctorIds } }).populate('specialtyId', 'name').lean();
+  const doctorMap = {};
+  doctors.forEach(doc => { doctorMap[doc.userId.toString()] = doc; });
+
+  data.forEach(d => {
+    if (d.doctorId && doctorMap[d.doctorId._id.toString()]) {
+      const doc = doctorMap[d.doctorId._id.toString()];
+      d.specialtyName = doc.specialtyId?.name || '';
+    }
+  });
     
   return { data, page, limit, total, totalPages };
 };
