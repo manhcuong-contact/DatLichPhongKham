@@ -14,6 +14,9 @@ const authenticate = (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = verifyAccessToken(token);
     req.user = decoded;   // { id, email, roleId, roleName }
+    if (decoded.userId && !decoded.id) {
+        req.user.id = decoded.userId;
+    }
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') return unauthorized(res, 'Token đã hết hạn');

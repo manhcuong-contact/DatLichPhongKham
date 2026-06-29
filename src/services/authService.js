@@ -33,7 +33,7 @@ const register = async ({ fullName, email, password, phone }) => {
   await patRepo.create({ userId: user._id });
 
   const payload = {
-    userId: user._id,
+    id: user._id,
     roleName: user.roleName,
   };
   const accessToken  = generateAccessToken(payload);
@@ -60,7 +60,7 @@ const login = async ({ email, password }) => {
   }
 
   const payload = {
-    userId: user._id,
+    id: user._id,
     roleName: user.roleName,
   };
   const accessToken  = generateAccessToken(payload);
