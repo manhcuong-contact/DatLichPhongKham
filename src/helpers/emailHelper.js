@@ -1,96 +1,178 @@
 /**
  * src/helpers/emailHelper.js
- * Nodemailer email sending helper
+ * Brevo (Sendinblue) transactional email helper
  */
-const nodemailer = require('nodemailer');
-const logger     = require('../utils/logger');
+const https = require('https');
+const logger = require('../utils/logger');
 
-let transporter = null;
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'MediFlow';
+const MAIL_FROM_EMAIL = process.env.MAIL_FROM_EMAIL || 'noreply@mediflow.vn';
 
-const getTransporter = () => {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host:   process.env.MAIL_HOST   || 'smtp.gmail.com',
-      port:   parseInt(process.env.MAIL_PORT) || 587,
-      secure: process.env.MAIL_SECURE === 'true',
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
-    });
-  }
-  return transporter;
-};
-
+/**
+ * Gửi email qua Brevo Transactional API
+ */
 const sendMail = async ({ to, subject, html, text }) => {
-  try {
-    if (!process.env.MAIL_USER || process.env.MAIL_USER === 'your_email@gmail.com') {
-      logger.warn(`[Email] Chưa cấu hình email - Giả lập gửi tới: ${to}`);
-      logger.info(`[Email] Subject: ${subject}`);
-      return { messageId: 'mock-' + Date.now() };
-    }
-    const info = await getTransporter().sendMail({
-      from: `"${process.env.MAIL_FROM_NAME || 'MediFlow'}" <${process.env.MAIL_FROM_EMAIL || process.env.MAIL_USER}>`,
-      to, subject, html, text,
+  const body = JSON.stringify({
+    sender: { name: MAIL_FROM_NAME, email: MAIL_FROM_EMAIL },
+    to: [{ email: to }],
+    subject,
+    htmlContent: html || `<p>${text || ''}</p>`,
+  });
+
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': BREVO_API_KEY,
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(body),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          logger.info(`[Email/Brevo] Đã gửi tới ${to} - Status: ${res.statusCode}`);
+          try { resolve(JSON.parse(data)); } catch { resolve({ raw: data }); }
+        } else {
+          logger.error(`[Email/Brevo] Lỗi ${res.statusCode}: ${data}`);
+          reject(new Error(`Brevo API error ${res.statusCode}: ${data}`));
+        }
+      });
     });
-    logger.info(`[Email] Đã gửi tới ${to}: ${info.messageId}`);
-    return info;
-  } catch (err) {
-    logger.error(`[Email] Lỗi gửi email: ${err.message}`);
-    throw err;
-  }
+
+    req.on('error', (err) => {
+      logger.error(`[Email/Brevo] Request error: ${err.message}`);
+      reject(err);
+    });
+
+    req.write(body);
+    req.end();
+  });
 };
 
-// Templates
+// ─── Email Templates ───────────────────────────────────────────────────────────
+
 const templates = {
-  appointmentConfirmation: (appt) => ({
-    subject: `[MediFlow] Xác nhận lịch hẹn #${appt.confirmationCode}`,
+  /** Gửi khi admin/bác sĩ XÁC NHẬN (confirmed) lịch hẹn */
+  appointmentConfirmed: (appt) => ({
+    subject: `[MediFlow] ✅ Lịch khám của bạn đã được xác nhận`,
     html: `
       <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9ff;padding:20px;">
-        <div style="background:#2563EB;padding:20px;border-radius:12px 12px 0 0;text-align:center;">
-          <h1 style="color:white;margin:0;">🏥 MediFlow</h1>
-          <p style="color:#bfdbfe;margin:4px 0 0;">Hệ thống đặt lịch khám sức khỏe</p>
+        <div style="background:linear-gradient(135deg,#2563EB,#1e40af);padding:24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:white;margin:0;font-size:22px;">🏥 MediFlow</h1>
+          <p style="color:#bfdbfe;margin:4px 0 0;font-size:13px;">Hệ thống đặt lịch khám sức khỏe</p>
         </div>
-        <div style="background:white;padding:30px;border-radius:0 0 12px 12px;">
-          <h2 style="color:#1e3a5f;">✅ Đặt lịch thành công!</h2>
-          <p>Xin chào <strong>${appt.patientName}</strong>,</p>
-          <p>Lịch hẹn của bạn đã được đặt thành công. Mã xác nhận: <strong style="color:#2563EB;">${appt.confirmationCode}</strong></p>
-          <div style="background:#f0f4ff;border-radius:8px;padding:16px;margin:20px 0;">
+        <div style="background:white;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+          <h2 style="color:#16a34a;margin-top:0;">✅ Lịch khám đã được xác nhận!</h2>
+          <p>Xin chào <strong>${appt.patientName || 'Bạn'}</strong>,</p>
+          <p>Lịch hẹn của bạn đã được <strong>xác nhận</strong>. Vui lòng đến đúng giờ!</p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0;">
             <table style="width:100%;border-collapse:collapse;">
-              <tr><td style="padding:6px;color:#666;">📅 Ngày khám:</td><td style="padding:6px;font-weight:600;">${appt.appointmentDate}</td></tr>
-              <tr><td style="padding:6px;color:#666;">⏰ Giờ khám:</td><td style="padding:6px;font-weight:600;">${appt.startTime} - ${appt.endTime}</td></tr>
-              <tr><td style="padding:6px;color:#666;">👨‍⚕️ Bác sĩ:</td><td style="padding:6px;font-weight:600;">${appt.doctorName}</td></tr>
-              <tr><td style="padding:6px;color:#666;">🏥 Phòng khám:</td><td style="padding:6px;font-weight:600;">${appt.clinicName}</td></tr>
-              <tr><td style="padding:6px;color:#666;">📍 Địa chỉ:</td><td style="padding:6px;">${appt.clinicAddress}</td></tr>
-              <tr><td style="padding:6px;color:#666;">🩺 Chuyên khoa:</td><td style="padding:6px;">${appt.specialtyName}</td></tr>
-              <tr><td style="padding:6px;color:#666;">💰 Phí khám:</td><td style="padding:6px;font-weight:600;">${Number(appt.consultationFee).toLocaleString('vi-VN')} đ</td></tr>
+              <tr><td style="padding:6px;color:#555;">📅 Ngày khám:</td><td style="padding:6px;font-weight:600;">${appt.appointmentDate || ''}</td></tr>
+              <tr><td style="padding:6px;color:#555;">⏰ Giờ khám:</td><td style="padding:6px;font-weight:600;">${appt.startTime || ''} - ${appt.endTime || ''}</td></tr>
+              <tr><td style="padding:6px;color:#555;">👨‍⚕️ Bác sĩ:</td><td style="padding:6px;font-weight:600;">${appt.doctorName || ''}</td></tr>
+              <tr><td style="padding:6px;color:#555;">🏥 Phòng khám:</td><td style="padding:6px;font-weight:600;">${appt.clinicName || ''}</td></tr>
+              ${appt.clinicAddress ? `<tr><td style="padding:6px;color:#555;">📍 Địa chỉ:</td><td style="padding:6px;">${appt.clinicAddress}</td></tr>` : ''}
             </table>
           </div>
-          <p style="color:#dc2626;font-size:13px;">⚠️ Vui lòng đến trước giờ hẹn 15 phút và mang theo CCCD/CMND.</p>
-          <p style="color:#666;font-size:12px;">Nếu cần hủy lịch, vui lòng liên hệ ít nhất 2 giờ trước giờ hẹn.</p>
+          <p style="color:#dc2626;font-size:13px;">⚠️ Vui lòng đến trước giờ hẹn <strong>15 phút</strong> và mang theo <strong>CCCD/CMND</strong>.</p>
         </div>
         <p style="text-align:center;color:#999;font-size:11px;margin-top:12px;">© 2026 MediFlow Healthcare. All rights reserved.</p>
       </div>
     `,
   }),
 
-  appointmentReminder: (appt) => ({
-    subject: `[MediFlow] Nhắc lịch khám hôm nay - ${appt.startTime}`,
+  /** Gửi khi bác sĩ đánh dấu KHÁM XONG (completed) */
+  appointmentCompleted: (appt) => ({
+    subject: `[MediFlow] 🎉 Kết quả khám bệnh của bạn`,
     html: `
-      <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;">
-        <div style="background:#2563EB;padding:20px;border-radius:12px 12px 0 0;text-align:center;">
-          <h1 style="color:white;margin:0;">🔔 Nhắc Lịch Khám</h1>
+      <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9ff;padding:20px;">
+        <div style="background:linear-gradient(135deg,#2563EB,#1e40af);padding:24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:white;margin:0;font-size:22px;">🏥 MediFlow</h1>
+        </div>
+        <div style="background:white;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+          <h2 style="color:#2563EB;margin-top:0;">🎉 Buổi khám đã hoàn thành!</h2>
+          <p>Xin chào <strong>${appt.patientName || 'Bạn'}</strong>,</p>
+          <p>Cảm ơn bạn đã sử dụng dịch vụ của MediFlow. Dưới đây là kết quả khám bệnh của bạn:</p>
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px;margin:20px 0;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:6px;color:#555;">📅 Ngày khám:</td><td style="padding:6px;font-weight:600;">${appt.appointmentDate || ''}</td></tr>
+              <tr><td style="padding:6px;color:#555;">👨‍⚕️ Bác sĩ:</td><td style="padding:6px;font-weight:600;">${appt.doctorName || ''}</td></tr>
+              ${appt.diagnosis ? `<tr><td style="padding:6px;color:#555;">🩺 Chẩn đoán:</td><td style="padding:6px;">${appt.diagnosis}</td></tr>` : ''}
+              ${appt.prescription ? `<tr><td style="padding:6px;color:#555;">💊 Đơn thuốc:</td><td style="padding:6px;">${appt.prescription}</td></tr>` : ''}
+            </table>
+          </div>
+          <p style="color:#666;font-size:13px;">Nếu bạn có bất kỳ thắc mắc nào, hãy liên hệ phòng khám hoặc đặt lịch tái khám.</p>
+          <div style="text-align:center;margin:20px 0;">
+            <a href="${process.env.CLIENT_URL || 'https://datlichphongkham-production.up.railway.app'}/patient/history.html" 
+               style="background:#2563EB;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;">
+              Xem lịch sử khám
+            </a>
+          </div>
+        </div>
+        <p style="text-align:center;color:#999;font-size:11px;margin-top:12px;">© 2026 MediFlow Healthcare. All rights reserved.</p>
+      </div>
+    `,
+  }),
+
+  /** Gửi NHẮC LỊCH 30 phút trước giờ khám */
+  appointmentReminder: (appt) => ({
+    subject: `[MediFlow] 🔔 Nhắc lịch khám - Còn 30 phút nữa!`,
+    html: `
+      <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9ff;padding:20px;">
+        <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:white;margin:0;font-size:22px;">⏰ Nhắc Lịch Khám</h1>
+          <p style="color:#fef3c7;margin:4px 0 0;font-size:13px;">MediFlow Healthcare</p>
+        </div>
+        <div style="background:white;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+          <h2 style="color:#d97706;margin-top:0;">⚠️ Lịch khám của bạn sắp bắt đầu!</h2>
+          <p>Xin chào <strong>${appt.patientName || 'Bạn'}</strong>,</p>
+          <p>Bạn có <strong style="color:#d97706;">lịch khám bệnh trong vòng 30 phút tới</strong>. Hãy chuẩn bị sẵn sàng!</p>
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:20px 0;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:6px;color:#555;">📅 Ngày khám:</td><td style="padding:6px;font-weight:600;">${appt.appointmentDate || ''}</td></tr>
+              <tr><td style="padding:6px;color:#555;">⏰ Giờ khám:</td><td style="padding:6px;font-weight:600;color:#d97706;font-size:16px;">${appt.startTime || ''} - ${appt.endTime || ''}</td></tr>
+              <tr><td style="padding:6px;color:#555;">👨‍⚕️ Bác sĩ:</td><td style="padding:6px;font-weight:600;">${appt.doctorName || ''}</td></tr>
+              <tr><td style="padding:6px;color:#555;">🏥 Phòng khám:</td><td style="padding:6px;font-weight:600;">${appt.clinicName || ''}</td></tr>
+              ${appt.clinicAddress ? `<tr><td style="padding:6px;color:#555;">📍 Địa chỉ:</td><td style="padding:6px;">${appt.clinicAddress}</td></tr>` : ''}
+            </table>
+          </div>
+          <p style="color:#dc2626;font-size:13px;font-weight:600;">⚠️ Nhớ mang theo: CCCD/CMND, thẻ BHYT (nếu có), và sổ khám bệnh.</p>
+        </div>
+        <p style="text-align:center;color:#999;font-size:11px;margin-top:12px;">© 2026 MediFlow Healthcare. All rights reserved.</p>
+      </div>
+    `,
+  }),
+
+  /** Gửi xác nhận đặt lịch (legacy, vẫn giữ) */
+  appointmentConfirmation: (appt) => ({
+    subject: `[MediFlow] Xác nhận đặt lịch hẹn thành công`,
+    html: `
+      <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;background:#f8f9ff;padding:20px;">
+        <div style="background:linear-gradient(135deg,#2563EB,#1e40af);padding:24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:white;margin:0;font-size:22px;">🏥 MediFlow</h1>
         </div>
         <div style="background:white;padding:30px;border-radius:0 0 12px 12px;">
-          <p>Xin chào <strong>${appt.patientName}</strong>,</p>
-          <p>Bạn có lịch khám <strong>HÔM NAY</strong> lúc <strong style="color:#2563EB;">${appt.startTime}</strong>:</p>
+          <h2 style="color:#1e3a5f;">✅ Đặt lịch thành công!</h2>
+          <p>Xin chào <strong>${appt.patientName || 'Bạn'}</strong>,</p>
+          <p>Lịch hẹn của bạn đã được đặt thành công. Vui lòng chờ xác nhận từ phòng khám.</p>
           <div style="background:#f0f4ff;border-radius:8px;padding:16px;margin:20px 0;">
-            <p><strong>👨‍⚕️ ${appt.doctorName}</strong> - ${appt.specialtyName}</p>
-            <p>🏥 ${appt.clinicName}</p>
-            <p>📍 ${appt.clinicAddress}</p>
+            <table style="width:100%;border-collapse:collapse;">
+              <tr><td style="padding:6px;color:#666;">📅 Ngày khám:</td><td style="padding:6px;font-weight:600;">${appt.appointmentDate || ''}</td></tr>
+              <tr><td style="padding:6px;color:#666;">⏰ Giờ khám:</td><td style="padding:6px;font-weight:600;">${appt.startTime || ''} - ${appt.endTime || ''}</td></tr>
+              <tr><td style="padding:6px;color:#666;">👨‍⚕️ Bác sĩ:</td><td style="padding:6px;font-weight:600;">${appt.doctorName || ''}</td></tr>
+              <tr><td style="padding:6px;color:#666;">🏥 Phòng khám:</td><td style="padding:6px;font-weight:600;">${appt.clinicName || ''}</td></tr>
+            </table>
           </div>
-          <p style="color:#dc2626;">⚠️ Vui lòng đến đúng giờ và mang theo CCCD/CMND.</p>
         </div>
+        <p style="text-align:center;color:#999;font-size:11px;margin-top:12px;">© 2026 MediFlow Healthcare. All rights reserved.</p>
       </div>
     `,
   }),
@@ -99,7 +181,7 @@ const templates = {
     subject: '[MediFlow] Yêu cầu đặt lại mật khẩu',
     html: `
       <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;">
-        <div style="background:#2563EB;padding:20px;border-radius:12px 12px 0 0;text-align:center;">
+        <div style="background:linear-gradient(135deg,#2563EB,#1e40af);padding:20px;border-radius:12px 12px 0 0;text-align:center;">
           <h1 style="color:white;margin:0;">🔑 Đặt Lại Mật Khẩu</h1>
         </div>
         <div style="background:white;padding:30px;border-radius:0 0 12px 12px;">

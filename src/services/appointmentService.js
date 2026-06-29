@@ -71,6 +71,37 @@ const updateStatus = async (id, status, extraData) => {
   if (!appointment) throw Object.assign(new Error('Không tìm thấy lịch hẹn'), { statusCode: 404 });
 
   await appointmentRepo.updateStatus(id, status, extraData);
+
+  // Gửi email thông báo qua Brevo
+  try {
+    const updatedAppt = await appointmentRepo.findById(id);
+    const patientEmail = updatedAppt?.patientId?.email;
+    if (patientEmail) {
+      const apptData = {
+        patientName: updatedAppt.patientName,
+        appointmentDate: updatedAppt.appointmentDate
+          ? new Date(updatedAppt.appointmentDate).toLocaleDateString('vi-VN')
+          : '',
+        startTime: updatedAppt.startTime || '',
+        endTime: updatedAppt.endTime || '',
+        doctorName: updatedAppt.doctorName || '',
+        clinicName: updatedAppt.clinicName || '',
+        diagnosis: extraData?.diagnosis || '',
+        prescription: extraData?.prescription || '',
+      };
+
+      if (status === 'confirmed') {
+        const tpl = templates.appointmentConfirmed(apptData);
+        await sendMail({ to: patientEmail, ...tpl });
+      } else if (status === 'completed') {
+        const tpl = templates.appointmentCompleted(apptData);
+        await sendMail({ to: patientEmail, ...tpl });
+      }
+    }
+  } catch (e) {
+    // Không throw - gửi email lỗi không ảnh hưởng logic chính
+    require('../utils/logger').error(`[Email] updateStatus email error: ${e.message}`);
+  }
 };
 
 const getAvailableSlots = async (doctorId, date) => {

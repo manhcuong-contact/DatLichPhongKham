@@ -9,7 +9,11 @@ const appointmentSchema = new mongoose.Schema({
   endTime: { type: String, required: true },
   status: { type: String, enum: ['pending', 'confirmed', 'completed', 'cancelled'], default: 'pending' },
   reason: { type: String },
-  notes: { type: String }
+  notes: { type: String },
+  diagnosis: { type: String },
+  prescription: { type: String },
+  cancelReason: { type: String },
+  reminderSent: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
